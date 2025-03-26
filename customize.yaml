@@ -1,0 +1,177 @@
+switch.angolo:
+  icon: mdi:ceiling-light
+sensor.netatmo_chezgiorgia_co2:
+  friendly_name: ChezGiorgia CO2
+sensor.netatmo_chezgiorgia_health:
+  friendly_name: ChezGiorgia Health
+  icon: mdi:baby-buggy
+sensor.netatmo_chezgiorgia_wifi:
+  friendly_name: ChezGiorgia Wifi
+sensor.netatmo_chezgiorgia_humidity:
+  friendly_name: ChezGiorgia Humidity
+sensor.netatmo_chezgiorgia_noise:
+  friendly_name: ChezGiorgia Noise
+sensor.netatmo_chezgiorgia_pressure:
+  friendly_name: ChezGiorgia Pressure
+  unit_of_measurement: hPa
+sensor.netatmo_chezgiorgia_temperature:
+  friendly_name: ChezGiorgia Temperature
+sensor.apartment_temperature:
+  friendly_name: Temperatura Appartamento
+  icon: mdi:thermometer
+sensor.apartment_temperature_tbf:
+  icon: mdi:thermometer
+sensor.apartment_humidity:
+  friendly_name: Umidità Appartamento
+  icon: mdi:water-percent
+sensor.apartment_humidity_tbf:
+  icon: mdi:water-percent
+sensor.apartment_illuminance:
+  friendly_name: Luminosità Appartamento
+  icon: mdi:brightness-6
+switch.smart_power_outlet_7:
+  friendly_name: Angolo Salotto
+switch.lavastoviglie:
+  icon: mdi:dishwasher
+switch.lavatrice:
+  icon: mdi:washing-machine
+switch.smart_power_outlet_1:
+  icon: mdi:television
+switch.albero_di_natale:
+  icon: mdi:pine-tree
+switch.piano_lavoro:
+  icon: mdi:coffee-maker
+switch.led_cucina:
+  icon: mdi:led-strip
+light.lampada_armadio_light:
+  icon: mdi:wardrobe
+light.led_cucina:
+  icon: mdi:led-strip
+sensor.scadenza_certificato_ssl:
+  icon: mdi:calendar
+  unit_of_measurement: days
+sensor.mi_c_c47c8d65ea87:
+  friendly_name: Timo Conductivity
+sensor.mi_m_c47c8d65ea87:
+  friendly_name: Timo Moisture
+sensor.mi_t_c47c8d65ea87:
+  friendly_name: Timo Temperature
+sensor.mi_l_c47c8d65ea87:
+  friendly_name: Timo Light
+sensor.mi_c_c47c8d65eb7f:
+  friendly_name: Piccola Drakaena Conductivity
+sensor.mi_l_c47c8d65eb7f:
+  friendly_name: Piccola Drakaena Light
+sensor.mi_m_c47c8d65eb7f:
+  friendly_name: Piccola Drakena Moisture
+sensor.mi_t_c47c8d65eb7f:
+  friendly_name: Piccola Drakaena Temperature
+sensor.mi_h_4c65a8dc6fe2:
+  friendly_name: Kitchen Humidity
+sensor.mi_t_4c65a8dc6fe2:
+  friendly_name: Kitchen Temperature
+sensor.mi_m_c47c8d664781:
+  friendly_name: Pianta Cucina Moisture
+sensor.mi_t_c47c8d664781:
+  friendly_name: Pianta Cucina Temperature
+sensor.mi_c_c47c8d664781:
+  friendly_name: Pianta Cucina Conductivity
+sensor.mi_l_c47c8d664781:
+  friendly_name: Pianta Cucina Light
+sensor.mi_m_c47c8d6647d3:
+  friendly_name: Grande Drakaena Moisture
+sensor.mi_t_c47c8d6647d3:
+  friendly_name: Grande Drakaena Temperature
+sensor.mi_c_c47c8d6647d3:
+  friendly_name: Grande Drakaena Conductivity
+sensor.mi_l_c47c8d6647d3:
+  friendly_name: Grande Drakaena Light
+sensor.mi_m_c47c8d65eb08:
+  friendly_name: Pianta Sala Moisture
+sensor.mi_t_c47c8d65eb08:
+  friendly_name: Pianta Sala Temperature
+sensor.mi_c_c47c8d65eb08:
+  friendly_name: Pianta Sala Conductivity
+sensor.mi_l_c47c8d65eb08:
+  friendly_name: Pianta Sala Light
+sensor.apartment_pressure:
+  friendly_name: Pressione Appartamento
+  icon: mdi:gauge
+binary_sensor.telecomando_lampada_armadio_update_available:
+  friendly_name: Telecomando Lampada Armadio Update Available
+sensor.telecomando_lampada_armadio_action:
+  friendly_name: Telecomando Lampada Armadio Action
+switch.frigorifero:
+  icon: mdi:fridge
+light.faretti_anticamera:
+  icon: mdi:wall-sconce-flat
+light.faretti_cucina:
+  icon: mdi:wall-sconce-flat
+light.faretti_ingresso:
+  icon: mdi:wall-sconce-flat
+light.bagno_di_servizio:
+  icon: mdi:vanity-light
+light.camera_degli_ospiti:
+  icon: mdi:ceiling-light
+light.balcone_sala:
+  icon: mdi:coach-lamp
+switch.multimedia:
+  icon: mdi:theater
+switch.router:
+  icon: mdi:access-point-network
+switch.forno:
+  icon: mdi:toaster-oven
+light.bagno_padronale:
+  icon: mdi:lightbulb-group
+light.luce_tavolo:
+  icon: mdi:string-lights
+light.luce_sala:
+  icon: mdi:globe-light
+light.parete_sala:
+  icon: mdi:compare
+sensor.temperatura_cucina_temperature:
+  friendly_name: Temperatura Cucina
+sensor.temperatura_cucina_battery:
+  friendly_name: Batteria Temperatura Cucina
+sensor.temperatura_camera_da_letto_media:
+  icon: mdi:thermometer
+sensor.temperatura_camera_degli_ospiti_media:
+  icon: mdi:thermometer
+sensor.temperatura_camera_di_giorgia_media:
+  icon: mdi:thermometer
+sensor.temperatura_cucina_humidity:
+  friendly_name: Umidità Cucina
+sensor.temperatura_salotto_media:
+  icon: mdi:thermometer
+sensor.temperatura_cucina_media:
+  icon: mdi:thermometer
+zone.home:
+  icon: mdi:home-modern
+sensor.temperatura_bagno_padronale_media:
+  icon: mdi:thermometer
+sensor.temperatura_bagno_di_servizio_media:
+  icon: mdi:thermometer
+sensor.day_of_the_week:
+  icon: mdi:calendar-today
+binary_sensor.lumi_lumi_sensor_magnet_0a1c4d01_on_off:
+  device_class: window
+binary_sensor.lumi_lumi_sensor_magnet_70669b02_on_off:
+  device_class: window
+binary_sensor.lumi_lumi_sensor_magnet_8ada3104_on_off:
+  device_class: window
+binary_sensor.lumi_lumi_sensor_magnet_9228bf01_on_off:
+  device_class: window
+binary_sensor.lumi_lumi_sensor_magnet_94c0dc01_on_off:
+  device_class: window
+binary_sensor.lumi_lumi_sensor_magnet_9a5f9b02_on_off:
+  device_class: door
+binary_sensor.lumi_lumi_sensor_magnet_e5910303_on_off:
+  device_class: window
+binary_sensor.lumi_lumi_sensor_magnet_eeadd701_on_off:
+  device_class: window
+binary_sensor.lumi_lumi_sensor_magnet_on_off:
+  device_class: window
+binary_sensor.lk_zb_doorsensor_d0003_ias_zone:
+  device_class: window
+sensor.temperatura_zona_giorno_media:
+  icon: mdi:thermometer

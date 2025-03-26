@@ -1,0 +1,2458 @@
+- id: '1620421870577'
+  alias: Campanello
+  description: ''
+  triggers:
+  - device_id: aae8f95cc446017405e89f29e72c5a67
+    domain: zha
+    type: remote_button_short_press
+    subtype: remote_button_short_press
+    trigger: device
+  - device_id: aae8f95cc446017405e89f29e72c5a67
+    domain: zha
+    type: remote_button_double_press
+    subtype: remote_button_double_press
+    trigger: device
+  - device_id: aae8f95cc446017405e89f29e72c5a67
+    domain: zha
+    type: remote_button_triple_press
+    subtype: remote_button_triple_press
+    trigger: device
+  - device_id: aae8f95cc446017405e89f29e72c5a67
+    domain: zha
+    type: remote_button_quadruple_press
+    subtype: remote_button_quadruple_press
+    trigger: device
+  actions:
+  - data:
+      message: C’è qualcuno alla porta
+      title: Sperons
+    action: notify.mobile_app_iphone_di_anna
+  - action: notify.mobile_app_marco
+    data:
+      message: C’è qualcuno alla porta
+      title: Sperons
+  - condition: time
+    after: 08:00
+    before: '21:00'
+  - data:
+      gw_mac: 7811dcdeb4de
+      ringtone_id: '10'
+      ringtone_vol: 20
+    action: xiaomi_aqara.play_ringtone
+  mode: queued
+  max: 10
+- id: '1620456318506'
+  alias: Luci | Accendi Luci Cucina
+  description: Se rilevato movimento, se premo pulsante Day mode, se torno a casa
+  triggers:
+  - type: motion
+    device_id: cbe6c38b5ab253acccea76024477c8ac
+    entity_id: b35ba22911ac7b1ddb758e2652eb4d5f
+    domain: binary_sensor
+    trigger: device
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: group.people
+      state: home
+    - condition: time
+      after: 06:00:00
+      before: '23:00:00'
+    enabled: false
+  actions:
+  - metadata: {}
+    data: {}
+    target:
+      device_id:
+      - fc2387fc56801831ab71b7838c4cf84c
+    action: switch.turn_on
+  - metadata: {}
+    data: {}
+    target:
+      device_id: 01847dfae94757a545e16858ecbfd02f
+    action: light.turn_on
+  mode: single
+- id: '1620456850540'
+  alias: Allarme | Spegni Luci
+  description: ''
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: arming
+    trigger: device
+  actions:
+  - data: {}
+    target:
+      area_id:
+      - 74e0ac055aaa480582d1e2e8de47d44f
+      - 0b38320b105143c9bd0186c7e81c4bc5
+      - 6ff3454502494386800f4195f39a87e5
+      - 23a02a43e6704807afd46529c33782a2
+      - bca5afb4b70e41509c939ae88bfcc3b6
+      - f309bc4d6f52475fb40147100df36fc0
+      - 0d9d024a94fd4d5792e28c31e8c0735a
+      - 4741e1a446a04b939eb0c5dd5ddab0ca
+      - 12582e3c185e4cdb99a4e3faa76da0e7
+    action: light.turn_off
+  - metadata: {}
+    data: {}
+    target:
+      device_id:
+      - 5389f20b140c36763154e9936568a53f
+      - 01847dfae94757a545e16858ecbfd02f
+      - fc2387fc56801831ab71b7838c4cf84c
+      - e2507075e4d0c2a8f1b7706f57c81ab9
+      - 1462245104f1a54f815d9a79ab349a18
+    action: switch.turn_off
+  mode: single
+- id: '1620456940266'
+  alias: Cleaning Lady | Activate
+  description: ''
+  trigger:
+  - platform: time
+    at: input_datetime.cleaning_lady_starttime
+  condition: []
+  action:
+  - service: automation.trigger
+    target:
+      entity_id:
+      - automation.bb8_increment_counter
+    data:
+      skip_condition: true
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.cleaning_lady
+    data: {}
+  - delay:
+      hours: 4
+      minutes: 30
+      seconds: 0
+      milliseconds: 0
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.cleaning_lady
+    data: {}
+  mode: single
+- id: '1620457001021'
+  alias: Luci | Lampada Armadio Turn On
+  trigger:
+  - device_id: c96eb0574fb8946625ebb627fbdad8da
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: turn_on
+  condition:
+  - condition: state
+    entity_id: light.lampada_armadio_level_light_color_on_off
+    state: 'off'
+  action:
+  - type: turn_on
+    device_id: f5ac2dc4b859643e95b174ce8837b37f
+    entity_id: a3253aec9f81b77e08aa6b89a6c05620
+    domain: light
+  mode: single
+- id: '1620457098189'
+  alias: Luci | Lampada Armadio Turn Off
+  description: ''
+  trigger:
+  - device_id: c96eb0574fb8946625ebb627fbdad8da
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: turn_off
+  condition:
+  - condition: state
+    entity_id: light.lampada_armadio_level_light_color_on_off
+    state: 'on'
+  action:
+  - type: turn_off
+    device_id: f5ac2dc4b859643e95b174ce8837b37f
+    entity_id: a3253aec9f81b77e08aa6b89a6c05620
+    domain: light
+  mode: single
+- id: '1620457264571'
+  alias: Luci | Lampada Armadio Increase Brightness
+  trigger:
+  - device_id: c96eb0574fb8946625ebb627fbdad8da
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: dim_up
+  condition:
+  - condition: device
+    type: is_on
+    device_id: f5ac2dc4b859643e95b174ce8837b37f
+    entity_id: a3253aec9f81b77e08aa6b89a6c05620
+    domain: light
+  action:
+  - device_id: f5ac2dc4b859643e95b174ce8837b37f
+    domain: light
+    entity_id: a3253aec9f81b77e08aa6b89a6c05620
+    type: brightness_increase
+  mode: single
+- id: '1620457456137'
+  alias: Luci | Lampada Armadio Decrease Brightness
+  description: ''
+  trigger:
+  - device_id: c96eb0574fb8946625ebb627fbdad8da
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: dim_down
+  condition:
+  - condition: state
+    entity_id: light.lampada_armadio_level_light_color_on_off
+    state: 'on'
+  action:
+  - device_id: f5ac2dc4b859643e95b174ce8837b37f
+    domain: light
+    entity_id: a3253aec9f81b77e08aa6b89a6c05620
+    type: brightness_decrease
+  mode: single
+- id: '1620457563888'
+  alias: Luci | Turn on Balcony Light if I open the window after sunset
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.finestre_salotto
+    from: 'off'
+    to: 'on'
+  condition:
+  - condition: and
+    conditions:
+    - after: sunset
+      condition: sun
+    - condition: device
+      device_id: c83200d541a3a10de05ad0510e61073d
+      domain: alarm_control_panel
+      entity_id: 856e7524b1969581ec49c10effd75ac9
+      type: is_disarmed
+  action:
+  - type: turn_on
+    device_id: 9430035a10748db5731f472b716a2e7b
+    entity_id: 74ef1f6c80064658dbaca190138b3495
+    domain: light
+  - wait_for_trigger:
+    - platform: state
+      entity_id:
+      - binary_sensor.finestre_salotto
+      from: 'on'
+      to: 'off'
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
+  - type: turn_off
+    device_id: 9430035a10748db5731f472b716a2e7b
+    entity_id: 74ef1f6c80064658dbaca190138b3495
+    domain: light
+  mode: single
+- id: '1620460795683'
+  alias: BB8 | Increment Counter
+  trigger:
+  - platform: device
+    device_id: 76673438b5732fc9582267751c361616
+    domain: vacuum
+    entity_id: f7d0660f82ec6ef6ebe32ef3f55a39b7
+    type: docked
+  action:
+  - service: counter.increment
+    data:
+      entity_id: counter.daily_vacuum
+  mode: single
+- id: '1620460979885'
+  alias: Cleaning Lady | Daily Reset
+  trigger:
+  - platform: state
+    entity_id: group.people
+    from: not_home
+    to: home
+  condition:
+  - condition: state
+    entity_id: input_boolean.cleaning_lady
+    state: 'on'
+  action:
+  - service: input_boolean.turn_off
+    entity_id: input_boolean.cleaning_lady
+- id: '1620461049449'
+  alias: Allarme | Arm
+  trigger:
+  - platform: state
+    entity_id: group.people
+    from: home
+    to: not_home
+  - platform: state
+    entity_id: input_boolean.holiday
+    to: 'on'
+    from: 'off'
+  - platform: state
+    entity_id:
+    - event.home_away_button_2
+  condition:
+  - condition: state
+    entity_id: input_boolean.cleaning_lady
+    state: 'off'
+  action:
+  - delay:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+  - service: alarm_control_panel.alarm_arm_away
+    metadata: {}
+    data:
+      code: '0305'
+    target:
+      device_id:
+      - c83200d541a3a10de05ad0510e61073d
+- id: '1620461097047'
+  alias: Allarme | Arm after Cleaning Lady
+  triggers:
+  - entity_id: input_boolean.cleaning_lady
+    from: 'on'
+    to: 'off'
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: group.people
+    state: not_home
+  actions:
+  - data:
+      code: '0305'
+    target:
+      device_id:
+      - c83200d541a3a10de05ad0510e61073d
+    action: alarm_control_panel.alarm_arm_away
+  mode: single
+- id: '1620461148824'
+  alias: Allarme | Disarm
+  triggers:
+  - entity_id: group.people
+    from: not_home
+    to: home
+    trigger: state
+  - entity_id: input_boolean.holiday
+    from: 'on'
+    to: 'off'
+    trigger: state
+  - entity_id: input_boolean.cleaning_lady
+    from: 'off'
+    to: 'on'
+    trigger: state
+  - device_id: 57917b794ef6f9fb6a78dcff3db83a4e
+    domain: homekit_controller
+    type: button1
+    subtype: single_press
+    trigger: device
+  - device_id: 1daf06196dc126183339cb1039d8484d
+    domain: lock
+    entity_id: ad13c671c49babd8823604b92886cc7b
+    type: unlocking
+    trigger: device
+  actions:
+  - data: {}
+    target:
+      device_id:
+      - c83200d541a3a10de05ad0510e61073d
+      - d18761e2c05c4192c503c32a23648d6d
+    action: alarm_control_panel.alarm_disarm
+  - action: automation.trigger
+    metadata: {}
+    data:
+      skip_condition: true
+    target:
+      entity_id: automation.temperatura_workday_warm_mode
+  mode: single
+- id: '1620461396451'
+  alias: Allarme | Send alert armed away
+  triggers:
+  - entity_id:
+    - binary_sensor.porta_e_finestre
+    from: 'off'
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: is_armed_away
+  actions:
+  - action: notify.mobile_app_marco
+    metadata: {}
+    data:
+      message: Qualcuno ha aperto una porta o finestra
+      title: Sperons
+  - action: notify.mobile_app_iphone_di_anna
+    metadata: {}
+    data:
+      message: Qualcuno ha aperto una porta o finestra
+      title: Sperons
+  mode: single
+- id: '1620461480038'
+  alias: Lavastoviglie | Alert perde acqua
+  description: ''
+  trigger:
+  - type: moist
+    platform: device
+    device_id: d08c58969593cfb31f366f85b243d549
+    entity_id: e26d8df6d4b2a621d58f69070d1005b7
+    domain: binary_sensor
+  condition: []
+  action:
+  - action: notify.mobile_app_iphone_14pro
+    data:
+      data: ALLARME | La lavastoviglie perde acqua
+      message: Sperons
+  - action: notify.mobile_app_iphone_di_anna
+    data:
+      data: ALLARME | La lavastoviglie perde acqua
+      message: Sperons
+  mode: single
+- id: '1620461571597'
+  alias: Lavastoviglie | Spegni se perde acqua
+  description: ''
+  trigger:
+  - type: moist
+    platform: device
+    device_id: d08c58969593cfb31f366f85b243d549
+    entity_id: e26d8df6d4b2a621d58f69070d1005b7
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition:
+  - condition: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: is_armed_away
+  action:
+  - type: turn_off
+    device_id: 2e739117bc860635d24f230e307843e4
+    entity_id: 5c64e501e19ae3faeace1ffb638c0e98
+    domain: switch
+  - service: notify.mobile_app_iphone_14pro
+    data:
+      title: Sperons
+      message: L'ho spenta
+      data:
+        subtitle: ALLARME | La lavastoviglie perde acqua
+  - service: notify.mobile_app_iphone_di_anna
+    data:
+      title: Sperons
+      message: L'ho spenta
+      data:
+        subtitle: ALLARME | La lavastoviglie perde acqua
+  mode: single
+- id: '1620461665694'
+  alias: Lavatrice | Alert perde acqua
+  description: ''
+  triggers:
+  - type: moist
+    device_id: 1b8a3e096e3e140928cfc9fa6bd80141
+    entity_id: 13029739ced99dd1ffa54e95af7619ed
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - action: notify.mobile_app_marco
+    data:
+      message: Controllala
+      title: Sperons
+      data:
+        subtitle: ALLARME | La lavatrice perde acqua
+  - data:
+      message: Controllala
+      title: Sperons
+      data:
+        subtitle: ALLARME | La lavatrice perde acqua
+    action: notify.mobile_app_iphone_di_anna
+  mode: single
+- id: '1620461721759'
+  alias: Lavatrice | Spegni se perde acqua
+  description: ''
+  triggers:
+  - type: moist
+    device_id: 1b8a3e096e3e140928cfc9fa6bd80141
+    entity_id: 13029739ced99dd1ffa54e95af7619ed
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    trigger: device
+  conditions:
+  - condition: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: is_armed_away
+  actions:
+  - type: turn_off
+    device_id: 12de3d48188784b200562407cfe514f0
+    entity_id: 7e9abbe6c3a81125ea4cc97257443d78
+    domain: switch
+  - type: turn_off
+    device_id: 5d93d6fc2c3cc1025f4422859e906e92
+    entity_id: 97cfd66961f5c87e37acc51c2109d154
+    domain: switch
+  - action: notify.mobile_app_iphone_14pro
+    data:
+      data: ALLARME | La lavastoviglie perde acqua
+      message: Sperons
+  - data:
+      title: Sperons
+      message: L'ho spenta
+      data:
+        subtitle: ALLARME | La lavatrice perde acqua
+    action: notify.mobile_app_iphone_di_anna
+  mode: single
+- id: '1620462111383'
+  alias: Allarme | Hai lasciato la finestra aperta
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: arming
+    trigger: device
+  conditions:
+  - condition: state
+    state: 'on'
+    entity_id: binary_sensor.porta_e_finestre
+  actions:
+  - action: notify.mobile_app_iphone_di_anna
+    metadata: {}
+    data:
+      message: Stai lasciando una finestra aperta
+      title: Sperons
+  - action: notify.mobile_app_marco
+    metadata: {}
+    data:
+      message: Stai lasciando una finestra aperta
+      title: Sperons
+- id: '1620545242805'
+  alias: Scrivania | Turn On
+  description: Accendi se c’è qualcuno in stanza per 5 minuti
+  triggers:
+  - type: occupied
+    device_id: 2e52b92b61c0a1c3a95f3b92659257a2
+    entity_id: 649d21c9f51a0a2244742106dc05ea55
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    trigger: device
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: group.people
+      state: home
+    - condition: time
+      after: 08:00:00
+      before: '20:00:00'
+      weekday:
+      - sun
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+      - sat
+  actions:
+  - type: turn_on
+    device_id: e2507075e4d0c2a8f1b7706f57c81ab9
+    entity_id: 34162cdad109b1302f8e491840613bb0
+    domain: switch
+  mode: single
+- id: '1620553921724'
+  alias: BB8 | Reset counter
+  description: ''
+  trigger:
+  - platform: time
+    at: '23:59:00'
+  condition:
+  - condition: state
+    entity_id: input_boolean.holiday
+    state: 'off'
+  action:
+  - service: counter.reset
+    target:
+      entity_id: counter.daily_vacuum
+    data: {}
+  mode: single
+- id: '1620716872312'
+  alias: Setup | Attiva Caloriferi
+  triggers:
+  - entity_id: binary_sensor.riscaldamento
+    from: 'off'
+    to: 'on'
+    trigger: state
+  actions:
+  - data: {}
+    target:
+      entity_id:
+      - automation.temperature_attiva_quando_disattiva_allarme
+      - automation.temperature_bagno_di_servizio_finestra_aperta
+      - automation.temperature_bagno_padronale_finestra_aperta_new
+      - automation.temperature_camera_da_letto_finestra_aperta_new
+      - automation.temperature_camera_degli_ospiti_finestra_aperta_new
+      - automation.temperature_camera_di_giorgia_finestra_aperta
+      - automation.temperature_riscaldamento_mattina_weekend_on_new
+      - automation.temperature_riscaldamento_mattina_work_day_on_new
+      - automation.temperature_spegni_caloriferi_new
+      - automation.temperature_zona_giorno_finestra_aperta_new
+    action: automation.turn_on
+  mode: queued
+  max: 10
+- id: '1620717037800'
+  alias: Setup | Disattiva Caloriferi
+  triggers:
+  - entity_id: binary_sensor.riscaldamento
+    from: 'on'
+    to: 'off'
+    trigger: state
+  actions:
+  - data:
+      stop_actions: true
+    target:
+      entity_id:
+      - automation.temperature_attiva_quando_disattiva_allarme
+      - automation.temperature_bagno_di_servizio_finestra_aperta
+      - automation.temperature_bagno_padronale_finestra_aperta_new
+      - automation.temperature_camera_da_letto_finestra_aperta_new
+      - automation.temperature_camera_degli_ospiti_finestra_aperta_new
+      - automation.temperature_camera_di_giorgia_finestra_aperta
+      - automation.temperature_riscaldamento_mattina_weekend_on_new
+      - automation.temperature_riscaldamento_mattina_work_day_on_new
+      - automation.temperature_spegni_caloriferi_new
+      - automation.temperature_zona_giorno_finestra_aperta_new
+    action: automation.turn_off
+  mode: queued
+  max: 10
+- id: '1620718048135'
+  alias: Temperatura | Camera Bambine | Eco Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_camera_bambine
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  - trigger: state
+    entity_id:
+    - input_boolean.holiday
+    to: 'on'
+  - trigger: state
+    entity_id:
+    - input_boolean.cleaning_lady
+    to: 'on'
+  actions:
+  - action: climate.set_hvac_mode
+    metadata: {}
+    data:
+      hvac_mode: 'off'
+    target:
+      area_id: 7440aedde01d4b689643563516df6e43
+  mode: queued
+  max: 10
+- id: '1620718250243'
+  alias: Temperatura | Bagno di Servizio | Eco Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_bagno_di_servizio
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  - trigger: state
+    entity_id:
+    - input_boolean.holiday
+    to: 'on'
+  - trigger: state
+    entity_id:
+    - input_boolean.cleaning_lady
+    to: 'on'
+  actions:
+  - action: climate.set_hvac_mode
+    metadata: {}
+    data:
+      hvac_mode: 'off'
+    target:
+      area_id: 6ff3454502494386800f4195f39a87e5
+  mode: queued
+  max: 10
+- id: '1620718407610'
+  alias: Covers | Attiva Automazioni
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.riscaldamento
+    from: 'on'
+    to: 'off'
+  action:
+  - service: automation.turn_on
+    target:
+      entity_id:
+      - automation.covers_apri_tende_30_40
+      - automation.covers_apri_tende_50_60
+      - automation.covers_apri_tende_75_80
+      - automation.covers_chiudi_tende
+      - automation.covers_modalita_automatica_off
+      - automation.covers_modalita_automatica_on
+      - automation.meteo_sta_piovendo
+    data: {}
+  mode: single
+- id: '1620718443268'
+  alias: Covers | Disattiva Automazioni
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.riscaldamento
+    from: 'off'
+    to: 'on'
+  action:
+  - service: automation.turn_off
+    metadata: {}
+    data:
+      stop_actions: true
+    target:
+      entity_id:
+      - automation.covers_apri_tende_30_40
+      - automation.covers_apri_tende_50_60
+      - automation.covers_apri_tende_75_80
+      - automation.covers_chiudi_tende
+      - automation.covers_modalita_automatica_off
+      - automation.covers_modalita_automatica_on
+      - automation.meteo_sta_piovendo
+  mode: single
+- id: '1620718509657'
+  alias: Covers | Chiudi Tende
+  triggers:
+  - event: sunset
+    offset: +01:00:00
+    trigger: sun
+  - entity_id:
+    - sensor.ilegna18_solar_radiation
+    below: '100'
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+    trigger: numeric_state
+  actions:
+  - metadata: {}
+    data: {}
+    target:
+      device_id:
+      - 2dffd4749fdcce86e3d523d2d6a86f6c
+      - 578ed3ee1633fc1724c71182b615ec7e
+      - a8d1c9ba98a3ab23fbe84403bd4dc33d
+    action: cover.open_cover
+  mode: single
+- id: '1620718664328'
+  alias: Covers | Modalità Automatica ON
+  trigger:
+  - platform: time
+    at: 08:00:00
+  - platform: state
+    entity_id: input_boolean.holiday
+    to: 'on'
+    from: 'off'
+  - platform: state
+    entity_id: group.people
+    from: home
+    to: not_home
+  - platform: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: armed_away
+  condition: []
+  action:
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.tende_automatiche
+    data: {}
+  - service: automation.turn_on
+    data: {}
+    target:
+      entity_id:
+      - automation.covers_apri_tende_30_40
+      - automation.covers_apri_tende_50_60
+      - automation.covers_apri_tende_75_80
+  mode: single
+- id: '1620718708866'
+  alias: Covers | Apri Tende | 75/80%
+  triggers:
+  - entity_id:
+    - sensor.ilegna18_solar_radiation
+    above: '100'
+    below: '350'
+    for:
+      minutes: 15
+    trigger: numeric_state
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.tende_automatiche
+      state: 'on'
+    - condition: numeric_state
+      entity_id: sensor.ilegna18_precipitation_rate
+      below: 0.2
+  actions:
+  - metadata: {}
+    data:
+      position: 75
+    target:
+      device_id:
+      - 2dffd4749fdcce86e3d523d2d6a86f6c
+      - a8d1c9ba98a3ab23fbe84403bd4dc33d
+    action: cover.set_cover_position
+  - metadata: {}
+    data:
+      position: 80
+    target:
+      device_id: 578ed3ee1633fc1724c71182b615ec7e
+    action: cover.set_cover_position
+  mode: single
+- id: '1620718750692'
+  alias: Covers | Apri Tende | 50/60%
+  triggers:
+  - entity_id:
+    - sensor.ilegna18_solar_radiation
+    above: '350'
+    below: '600'
+    for:
+      minutes: 15
+    trigger: numeric_state
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.tende_automatiche
+      state: 'on'
+    - condition: numeric_state
+      entity_id: sensor.ilegna18_precipitation_rate
+      below: 0.2
+  actions:
+  - metadata: {}
+    data:
+      position: 50
+    target:
+      device_id:
+      - 2dffd4749fdcce86e3d523d2d6a86f6c
+      - a8d1c9ba98a3ab23fbe84403bd4dc33d
+    action: cover.set_cover_position
+  - metadata: {}
+    data:
+      position: 60
+    target:
+      device_id: 578ed3ee1633fc1724c71182b615ec7e
+    action: cover.set_cover_position
+  mode: single
+- id: '1620718790037'
+  alias: Covers | Apri Tende | 30/40%
+  triggers:
+  - entity_id:
+    - sensor.ilegna18_solar_radiation
+    above: 500
+    for:
+      minutes: 15
+    trigger: numeric_state
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.tende_automatiche
+      state: 'on'
+    - condition: numeric_state
+      entity_id: sensor.ilegna18_precipitation_rate
+      below: 0.2
+  actions:
+  - metadata: {}
+    data:
+      position: 30
+    target:
+      device_id:
+      - 2dffd4749fdcce86e3d523d2d6a86f6c
+      - a8d1c9ba98a3ab23fbe84403bd4dc33d
+    action: cover.set_cover_position
+  - metadata: {}
+    data:
+      position: 40
+    target:
+      device_id: 578ed3ee1633fc1724c71182b615ec7e
+    action: cover.set_cover_position
+  mode: single
+- id: '1621149498979'
+  alias: Meteo | Sta piovendo
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id:
+    - sensor.ilegna18_precipitation_rate
+    above: '0'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  condition:
+  - condition: and
+    conditions:
+    - condition: time
+      after: 07:00:00
+      before: '22:00:00'
+      weekday:
+      - sun
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+      - sat
+    - condition: device
+      device_id: c83200d541a3a10de05ad0510e61073d
+      domain: alarm_control_panel
+      entity_id: 856e7524b1969581ec49c10effd75ac9
+      type: is_disarmed
+  action:
+  - service: cover.open_cover
+    metadata: {}
+    data: {}
+    target:
+      device_id:
+      - 2dffd4749fdcce86e3d523d2d6a86f6c
+      - a97fe1db03ad0b6cc9a8c2b82105a60e
+      - 578ed3ee1633fc1724c71182b615ec7e
+  - service: notify.mobile_app_iphone_14pro
+    data:
+      message: Sta piovendo
+      title: Chez Anna&Max
+  - service: notify.mobile_app_iphone_di_anna
+    data:
+      title: Chez Anna&Max
+      message: Sta piovendo
+  - delay:
+      hours: 1
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
+  mode: single
+- id: '1627219862900'
+  alias: Covers | Modalità Automatica OFF
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: input_boolean.tende_automatiche
+    to: 'off'
+    from: 'on'
+  condition: []
+  action:
+  - service: automation.turn_off
+    target:
+      entity_id:
+      - automation.covers_apri_tende_20
+      - automation.covers_apri_tende_40
+      - automation.covers_apri_tende_60
+      - automation.covers_apri_tende_80
+  mode: single
+- id: '1627220397134'
+  alias: Forno | Gestisci quando in Vacanza
+  description: ''
+  triggers:
+  - entity_id:
+    - input_boolean.holiday
+    from: 'off'
+    trigger: state
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: c633058d90b2f41f1d4786df78d1969c
+    entity_id: d974ef70b7826371fc7d9a49a456a9f6
+    domain: switch
+  - wait_for_trigger:
+    - trigger: state
+      entity_id:
+      - input_boolean.holiday
+      from: 'on'
+      to: 'off'
+  - type: turn_on
+    device_id: c633058d90b2f41f1d4786df78d1969c
+    entity_id: d974ef70b7826371fc7d9a49a456a9f6
+    domain: switch
+  mode: single
+- id: '1629822147050'
+  alias: Condizionatore | Finestra Aperta | Zona Giorno
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.finestre_zona_giorno
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    from: 'off'
+    to: 'on'
+  condition:
+  - condition: not
+    conditions:
+    - condition: device
+      device_id: 3a08356455069bcd013a8073bde73d59
+      domain: climate
+      entity_id: 1557890387d39325bafdd527dd4dbb62
+      type: is_hvac_mode
+      hvac_mode: 'off'
+  action:
+  - device_id: 3a08356455069bcd013a8073bde73d59
+    domain: climate
+    entity_id: 1557890387d39325bafdd527dd4dbb62
+    type: set_hvac_mode
+    hvac_mode: 'off'
+  - wait_for_trigger:
+    - platform: state
+      entity_id:
+      - binary_sensor.finestre_zona_giorno
+      from: 'on'
+      to: 'off'
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
+  - device_id: 3a08356455069bcd013a8073bde73d59
+    domain: climate
+    entity_id: 1557890387d39325bafdd527dd4dbb62
+    type: set_hvac_mode
+    hvac_mode: dry
+  mode: single
+- id: '1629822332364'
+  alias: Condizionatore | Finestra Aperta | Camera da Letto
+  description: ''
+  trigger:
+  - type: opened
+    platform: device
+    device_id: d61561c1b1ada64657e53aa2565a2e23
+    entity_id: 61b943dc3098da6ab3d56d6f79ba1f83
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition:
+  - condition: not
+    conditions:
+    - condition: device
+      device_id: baac0bbae3e5bd4dfee3d472de1fcccb
+      domain: climate
+      entity_id: aaa4d9a34e9724359be0c3516e232be5
+      type: is_hvac_mode
+      hvac_mode: 'off'
+  action:
+  - device_id: baac0bbae3e5bd4dfee3d472de1fcccb
+    domain: climate
+    entity_id: aaa4d9a34e9724359be0c3516e232be5
+    type: set_hvac_mode
+    hvac_mode: 'off'
+  - wait_for_trigger:
+    - type: not_opened
+      platform: device
+      device_id: d61561c1b1ada64657e53aa2565a2e23
+      entity_id: 61b943dc3098da6ab3d56d6f79ba1f83
+      domain: binary_sensor
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
+  - device_id: baac0bbae3e5bd4dfee3d472de1fcccb
+    domain: climate
+    entity_id: aaa4d9a34e9724359be0c3516e232be5
+    type: set_hvac_mode
+    hvac_mode: dry
+  mode: single
+- id: '1629822474599'
+  alias: Condizionatore | Finestra Aperta | Camera Bambine
+  description: ''
+  trigger:
+  - type: opened
+    platform: device
+    device_id: 591c88f3f1581c1b0d753cb3fefa3bf1
+    entity_id: cb2bc219a3fd841e7403a23868576290
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition:
+  - condition: not
+    conditions:
+    - condition: device
+      device_id: 04d9bd175a50efc953575388736c2cd7
+      domain: climate
+      entity_id: 3a673fb1c392b67e73c0acc24cc67006
+      type: is_hvac_mode
+      hvac_mode: 'off'
+  action:
+  - device_id: 04d9bd175a50efc953575388736c2cd7
+    domain: climate
+    entity_id: 3a673fb1c392b67e73c0acc24cc67006
+    type: set_hvac_mode
+    hvac_mode: 'off'
+  - wait_for_trigger:
+    - type: not_opened
+      platform: device
+      device_id: 591c88f3f1581c1b0d753cb3fefa3bf1
+      entity_id: cb2bc219a3fd841e7403a23868576290
+      domain: binary_sensor
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
+  - device_id: 04d9bd175a50efc953575388736c2cd7
+    domain: climate
+    entity_id: 3a673fb1c392b67e73c0acc24cc67006
+    type: set_hvac_mode
+    hvac_mode: dry
+  mode: single
+- id: '1629822527635'
+  alias: Condizionatore | Finestra Aperta | Studio
+  description: ''
+  trigger:
+  - type: opened
+    platform: device
+    device_id: 5f16ae17e625ea487fd9ebdb485be83d
+    entity_id: 0322d8ccc1348a57da2ddb1f4e7d4ed8
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition:
+  - condition: not
+    conditions:
+    - condition: device
+      device_id: 65e157223dd4cd8f233dac9b13d62672
+      domain: climate
+      entity_id: 7be03bf0e41b5d2770141961a33f9e11
+      type: is_hvac_mode
+      hvac_mode: 'off'
+  action:
+  - device_id: 65e157223dd4cd8f233dac9b13d62672
+    domain: climate
+    entity_id: 7be03bf0e41b5d2770141961a33f9e11
+    type: set_hvac_mode
+    hvac_mode: 'off'
+  - wait_for_trigger:
+    - type: not_opened
+      platform: device
+      device_id: 5f16ae17e625ea487fd9ebdb485be83d
+      entity_id: 0322d8ccc1348a57da2ddb1f4e7d4ed8
+      domain: binary_sensor
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
+  - device_id: 65e157223dd4cd8f233dac9b13d62672
+    domain: climate
+    entity_id: 7be03bf0e41b5d2770141961a33f9e11
+    type: set_hvac_mode
+    hvac_mode: dry
+  mode: single
+- id: '1634981179197'
+  alias: Temperatura | Camera Bambine | Temperatura bassa
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.ble_temperature_temperatura_camera_bambine
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+    below: 19.9
+    trigger: numeric_state
+  conditions:
+  - condition: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: is_disarmed
+  - condition: state
+    entity_id: input_boolean.holiday
+    state: 'off'
+  actions:
+  - action: notify.mobile_app_iphone_di_anna
+    metadata: {}
+    data:
+      message: Camera bambine temperatura bassa
+      title: Sperons
+  - action: notify.mobile_app_marco
+    metadata: {}
+    data:
+      message: Camera bambine temperatura bassa
+      title: Sperons
+  mode: single
+- id: '1634981552369'
+  alias: Temperatura | Camera Bambine | Umidità bassa
+  description: ''
+  triggers:
+  - for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+    entity_id:
+    - sensor.ble_humidity_temperatura_camera_bambine
+    below: '45'
+    trigger: numeric_state
+  conditions:
+  - condition: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: is_disarmed
+  - condition: state
+    entity_id: input_boolean.holiday
+    state: 'off'
+  actions:
+  - action: notify.mobile_app_iphone_di_anna
+    metadata: {}
+    data:
+      message: Camera bambine umidità bassa
+      title: Sperons
+  - action: notify.mobile_app_marco
+    metadata: {}
+    data:
+      message: Camera bambine umidità bassa
+      title: Sperons
+  mode: single
+- id: '1635109380228'
+  alias: Allarme | Porta aperta
+  description: ''
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: armed_away
+    trigger: device
+  conditions:
+  - type: is_open
+    condition: device
+    device_id: e3cb4d185c2a20a48fe86927b86fec7f
+    entity_id: 179e602e6f41506d3e5247b2b8cd9332
+    domain: binary_sensor
+  actions:
+  - action: notify.mobile_app_iphone_di_anna
+    metadata: {}
+    data:
+      message: Hai lasciato la porta aperta
+      title: Sperons
+  - action: notify.mobile_app_marco
+    metadata: {}
+    data:
+      message: Hai lasciato la porta aperta
+      title: Sperons
+  mode: single
+- id: '1639823167889'
+  alias: Luci di Natale | Turn Off
+  description: ''
+  triggers:
+  - at: 00:00
+    enabled: true
+    trigger: time
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: arming
+    trigger: device
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      device_id:
+      - 77eab15b63cc0ac50aaaa591095f387f
+      - 8452011ed8d7923ed4d54a9cf16327c5
+      - 0e9cd1caaedd880ca6466330e9995b32
+  mode: single
+- id: '1643016750304'
+  alias: Luci | The Sub On
+  description: Se The Sub acceso non spegnere Angolo
+  trigger:
+  - platform: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: armed_away
+  condition:
+  - condition: state
+    entity_id: input_boolean.the_sub
+    state: 'on'
+  action:
+  - type: turn_on
+    device_id: 5389f20b140c36763154e9936568a53f
+    entity_id: d5cb620718715d87abb8e4a9ab5d56d8
+    domain: switch
+  mode: single
+- id: '1648982551833'
+  alias: Temperatura | Spegni Caloriferi
+  description: ''
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: arming
+    trigger: device
+  - at: '23:59:59'
+    trigger: time
+  conditions: []
+  actions:
+  - action: automation.trigger
+    metadata: {}
+    data:
+      skip_condition: true
+    target:
+      label_id: eco_mode
+  mode: single
+- id: '1648983128840'
+  alias: Temperatura | Weekend | Warm Mode
+  description: ''
+  triggers:
+  - at: 07:00
+    trigger: time
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: group.people
+      state: home
+    - condition: state
+      entity_id: binary_sensor.workday_sensor
+      state: 'off'
+  actions:
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_bagno_di_servizio
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_bagno_di_servizio_finestra_chiusa
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_bagno_padronale
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_bagno_padronale_finestra_chiusa
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_camera_bambine
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_camera_bambine_finestra_chiusa
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_camera_da_letto
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_camera_matrimoniale_finestra_chiusa
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_studio
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_studio_warm_mode
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestre_zona_giorno
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_zona_giorno_warm_mode
+  mode: queued
+  max: 10
+- id: '1648983498528'
+  alias: Temperatura | Studio | Eco Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_studio
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  - trigger: state
+    entity_id:
+    - input_boolean.holiday
+    to: 'on'
+  - trigger: state
+    entity_id:
+    - input_boolean.cleaning_lady
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      temperature: 4
+    target:
+      device_id: ba3585d6944421999760341e34949bb2
+    action: climate.set_temperature
+  mode: queued
+  max: 10
+- id: '1648985951150'
+  alias: Temperatura | Bagno Padronale | Eco Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_bagno_padronale
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  - trigger: state
+    entity_id:
+    - input_boolean.holiday
+    to: 'on'
+  - trigger: state
+    entity_id:
+    - input_boolean.cleaning_lady
+    to: 'on'
+  conditions: []
+  actions:
+  - target:
+      device_id: caa6a9c8e1d2b8ed8f758d34f2ac4488
+    data:
+      temperature: 4
+    action: climate.set_temperature
+  mode: queued
+  max: 10
+- id: '1648986149286'
+  alias: Temperatura | Zona Giorno | Eco Mode
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.finestre_zona_giorno
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    to: 'on'
+    trigger: state
+  - trigger: state
+    entity_id:
+    - input_boolean.holiday
+    to: 'on'
+  - trigger: state
+    entity_id:
+    - input_boolean.cleaning_lady
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      temperature: 4
+    target:
+      device_id:
+      - 1543db44fffa26ecbd2501f888bd069f
+      - 87a22287aecd7588d3917e8a0b6ad74b
+    action: climate.set_temperature
+  mode: queued
+  max: 10
+- id: '1648990136054'
+  alias: Temperatura | Camera Matrimoniale | Eco Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_camera_da_letto
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  - trigger: state
+    entity_id:
+    - input_boolean.holiday
+    to: 'on'
+  - trigger: state
+    entity_id:
+    - input_boolean.cleaning_lady
+    to: 'on'
+  conditions: []
+  actions:
+  - data:
+      temperature: 4
+    target:
+      device_id: 1612b639fa2be576fabaa53bdbdac59f
+    action: climate.set_temperature
+  mode: queued
+  max: 10
+- id: '1657955018954'
+  alias: BB8 | Pulisci in Vacanza
+  description: ''
+  triggers:
+  - at: 09:00:00
+    trigger: time
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.holiday
+      state: 'on'
+    - condition: time
+      weekday:
+      - sun
+      - wed
+      - fri
+      - mon
+  actions:
+  - data: {}
+    target:
+      entity_id: counter.daily_vacuum
+    action: counter.reset
+  - action: vacuum.start
+    metadata: {}
+    data: {}
+    target:
+      device_id: 76673438b5732fc9582267751c361616
+  mode: single
+- id: '1689448378492'
+  alias: Air Purifier Salotto | Turn on if PM 2.5 above 12
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.air_purifier_zona_giorno_pm2_5
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+    above: 12
+    trigger: numeric_state
+  conditions:
+  - condition: state
+    entity_id: group.people
+    state: home
+  - condition: state
+    entity_id: binary_sensor.finestre_zona_giorno
+    state: 'off'
+  actions:
+  - type: turn_on
+    device_id: 0d2e0717468cfad163af25cb518c421f
+    entity_id: b6de69964b3d84dd2908af643f854803
+    domain: fan
+  mode: single
+- id: '1689448546001'
+  alias: Air Purifier Salotto | Turn Off
+  description: Se usciamo di casa, se premo night mode
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: armed_away
+    trigger: device
+  - entity_id:
+    - sensor.air_purifier_zona_giorno_pm2_5
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+    below: 9
+    trigger: numeric_state
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 0d2e0717468cfad163af25cb518c421f
+    entity_id: b6de69964b3d84dd2908af643f854803
+    domain: fan
+  mode: single
+- id: '1689628098081'
+  alias: Air Purifier Salotto | Spegni se finestra aperta
+  description: Riaccendi dopo 1 minuto
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.finestre_zona_giorno
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    from: 'off'
+  condition:
+  - condition: device
+    device_id: 0d2e0717468cfad163af25cb518c421f
+    domain: fan
+    entity_id: b6de69964b3d84dd2908af643f854803
+    type: is_on
+  action:
+  - type: turn_off
+    device_id: 0d2e0717468cfad163af25cb518c421f
+    entity_id: b6de69964b3d84dd2908af643f854803
+    domain: fan
+  mode: queued
+  max: 10
+- id: '1705696815077'
+  alias: Attiva sirena se apro porta
+  description: ''
+  trigger:
+  - type: opened
+    platform: device
+    device_id: e3cb4d185c2a20a48fe86927b86fec7f
+    entity_id: 179e602e6f41506d3e5247b2b8cd9332
+    domain: binary_sensor
+  condition:
+  - condition: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: is_armed_away
+  action:
+  - service: xiaomi_aqara.play_ringtone
+    data:
+      ringtone_vol: 100
+      gw_mac: 7811dcdeb4de
+      ringtone_id: '7'
+  mode: single
+- id: '1707943144465'
+  alias: Luci | Spegni Cucina se nessun movimento
+  description: ''
+  triggers:
+  - type: not_occupied
+    device_id: cbe6c38b5ab253acccea76024477c8ac
+    entity_id: 65194f388168c176fb0b50e49bd881d3
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+    trigger: device
+  conditions: []
+  actions:
+  - metadata: {}
+    data: {}
+    target:
+      area_id:
+      - f309bc4d6f52475fb40147100df36fc0
+      - 0d9d024a94fd4d5792e28c31e8c0735a
+    action: light.turn_off
+  mode: single
+- id: '1708764461789'
+  alias: Luci | Spegni Salotto se nessun movimento
+  description: ''
+  trigger:
+  - type: not_occupied
+    platform: device
+    device_id: 2c72f52a91a6e88f9bfd44446a03036b
+    entity_id: 65e210f4d2343847e035775c267a233e
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+  condition: []
+  action:
+  - metadata: {}
+    data: {}
+    target:
+      device_id: 5389f20b140c36763154e9936568a53f
+    action: switch.turn_off
+  - metadata: {}
+    data: {}
+    target:
+      area_id:
+      - 4741e1a446a04b939eb0c5dd5ddab0ca
+      - 0d9d024a94fd4d5792e28c31e8c0735a
+    action: light.turn_off
+  mode: single
+- id: '1710596207507'
+  alias: Air Purifier Bambine | Turn On if PM2.5 higher then 12
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.air_purifier_cameretta_pm2_5
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+    above: 12
+    trigger: numeric_state
+  conditions:
+  - condition: state
+    entity_id: group.people
+    state: home
+  - condition: state
+    state: 'off'
+    entity_id: binary_sensor.finestra_camera_bambine
+  actions:
+  - type: turn_on
+    device_id: ccb2e11f57860e721ef36e5b7d895b91
+    entity_id: 9fd3dd73529c18b2a5cc9f925fc723a7
+    domain: fan
+  - choose:
+    - conditions:
+      - condition: time
+        weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+        - sat
+        - sun
+        after: '20:00:00'
+      sequence:
+      - action: switch.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - switch.air_purifier_cameretta_buzzer
+          - switch.air_purifier_cameretta_child_lock
+      - action: fan.set_preset_mode
+        metadata: {}
+        data:
+          preset_mode: silent
+        target:
+          device_id: ccb2e11f57860e721ef36e5b7d895b91
+    - conditions:
+      - condition: time
+        before: '20:00:00'
+        weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+        - sat
+        - sun
+      sequence:
+      - action: switch.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - switch.air_purifier_cameretta_buzzer
+          - switch.air_purifier_cameretta_child_lock
+      - action: fan.set_preset_mode
+        metadata: {}
+        data:
+          preset_mode: auto
+        target:
+          device_id: ccb2e11f57860e721ef36e5b7d895b91
+  mode: single
+- id: '1710596277788'
+  alias: Air Purifier Bambine | Turn Off se finestra aperta
+  description: Riaccendi dopo 1 minuto
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.finestra_camera_bambine
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    from: 'off'
+  condition:
+  - condition: device
+    device_id: ccb2e11f57860e721ef36e5b7d895b91
+    domain: fan
+    entity_id: 9fd3dd73529c18b2a5cc9f925fc723a7
+    type: is_on
+  action:
+  - type: turn_off
+    device_id: ccb2e11f57860e721ef36e5b7d895b91
+    entity_id: 9fd3dd73529c18b2a5cc9f925fc723a7
+    domain: fan
+  mode: queued
+  max: 10
+- id: '1712048401075'
+  alias: Luci | Spegni tutto se nessun movimento in Bagno Padronale
+  description: ''
+  trigger:
+  - type: no_motion
+    platform: device
+    device_id: 92a9e4f60780ecd6ac64082d0b845bde
+    entity_id: 73773271ccef453c311446ea676e30c8
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+  condition:
+  - condition: device
+    type: is_on
+    device_id: 0b4529ac69ba47f2939d22231308696f
+    entity_id: bcf11309c1fe17c724c17d53bb7f4faa
+    domain: light
+  action:
+  - service: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      area_id: 0b38320b105143c9bd0186c7e81c4bc5
+  mode: single
+- id: '1715589777990'
+  alias: Allarme | Disarm Cameras
+  description: ''
+  trigger:
+  - platform: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: disarmed
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  condition: []
+  action:
+  - service: alarm_control_panel.alarm_disarm
+    metadata: {}
+    data: {}
+    target:
+      device_id: d18761e2c05c4192c503c32a23648d6d
+  mode: single
+- id: '1715688723392'
+  alias: Allarme | Arm Cameras
+  description: ''
+  trigger:
+  - platform: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: armed_away
+  condition: []
+  action:
+  - service: alarm_control_panel.alarm_arm_away
+    metadata: {}
+    data:
+      code: '0305'
+    target:
+      device_id: d18761e2c05c4192c503c32a23648d6d
+  mode: single
+- id: '1715689049928'
+  alias: BB8 | Start Cleaning
+  description: ''
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: armed_away
+    for:
+      hours: 0
+      minutes: 20
+      seconds: 0
+    trigger: device
+  conditions:
+  - condition: and
+    conditions:
+    - condition: or
+      conditions:
+      - condition: time
+        after: 08:00:00
+        before: '20:00:00'
+        weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+      - condition: time
+        weekday:
+        - sun
+        - sat
+        after: 09:00:00
+        before: '20:00:00'
+    - condition: numeric_state
+      entity_id: counter.daily_vacuum
+      below: 1
+  actions:
+  - action: vacuum.start
+    metadata: {}
+    data: {}
+    target:
+      device_id: 76673438b5732fc9582267751c361616
+  mode: single
+- id: '1715689185666'
+  alias: BB8 | Stop Cleaning
+  description: ''
+  trigger:
+  - platform: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: disarmed
+  condition:
+  - condition: device
+    device_id: 76673438b5732fc9582267751c361616
+    domain: vacuum
+    entity_id: f7d0660f82ec6ef6ebe32ef3f55a39b7
+    type: is_cleaning
+  action:
+  - device_id: 76673438b5732fc9582267751c361616
+    domain: vacuum
+    entity_id: f7d0660f82ec6ef6ebe32ef3f55a39b7
+    type: dock
+  mode: single
+- id: '1724675797749'
+  alias: Condizionatore | Spegni se attivo allarme
+  description: ''
+  trigger:
+  - platform: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: armed_away
+  condition: []
+  action:
+  - action: climate.set_hvac_mode
+    metadata: {}
+    data:
+      hvac_mode: 'off'
+    target:
+      device_id:
+      - baac0bbae3e5bd4dfee3d472de1fcccb
+      - 3a08356455069bcd013a8073bde73d59
+      - 65e157223dd4cd8f233dac9b13d62672
+      - 04d9bd175a50efc953575388736c2cd7
+  mode: single
+- id: '1727761701956'
+  alias: Luci | Spegni Bagno Padronale se nessun movimento
+  description: ''
+  trigger:
+  - type: not_occupied
+    platform: device
+    device_id: 92a9e4f60780ecd6ac64082d0b845bde
+    entity_id: 01e9a2b3f51081f90d5547bf6f3b81ce
+    domain: binary_sensor
+  condition: []
+  action:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      area_id: 0b38320b105143c9bd0186c7e81c4bc5
+  mode: single
+- id: '1728542039625'
+  alias: Allarme | Chiudi porta quando stai attivando allarme
+  description: ''
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: arming
+    trigger: device
+  - type: not_opened
+    device_id: e3cb4d185c2a20a48fe86927b86fec7f
+    entity_id: 179e602e6f41506d3e5247b2b8cd9332
+    domain: binary_sensor
+    trigger: device
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  conditions:
+  - condition: device
+    device_id: 1daf06196dc126183339cb1039d8484d
+    domain: lock
+    entity_id: ad13c671c49babd8823604b92886cc7b
+    type: is_unlocked
+  actions:
+  - device_id: 1daf06196dc126183339cb1039d8484d
+    domain: lock
+    entity_id: ad13c671c49babd8823604b92886cc7b
+    type: lock
+  mode: single
+- id: '1733060317264'
+  alias: Luci di Natale | Turn On when return home
+  description: ''
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: disarmed
+    trigger: device
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      device_id:
+      - 77eab15b63cc0ac50aaaa591095f387f
+      - 8452011ed8d7923ed4d54a9cf16327c5
+      - 0e9cd1caaedd880ca6466330e9995b32
+  mode: single
+- id: '1734164587606'
+  alias: Scrivania | Turn Off
+  description: ''
+  triggers:
+  - type: not_occupied
+    device_id: 2e52b92b61c0a1c3a95f3b92659257a2
+    entity_id: 649d21c9f51a0a2244742106dc05ea55
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: e2507075e4d0c2a8f1b7706f57c81ab9
+    entity_id: 34162cdad109b1302f8e491840613bb0
+    domain: switch
+  mode: single
+- id: '1734202278457'
+  alias: Air Purifier Bambine | Turn Off
+  description: Se usciamo di casa, se premo night mode
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: armed_away
+    trigger: device
+  - entity_id:
+    - sensor.air_purifier_cameretta_pm2_5
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+    below: 9
+    trigger: numeric_state
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: ccb2e11f57860e721ef36e5b7d895b91
+    entity_id: 9fd3dd73529c18b2a5cc9f925fc723a7
+    domain: fan
+  mode: single
+- id: '1734807261908'
+  alias: Luci di Natale | Turn On after sunser
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0
+  conditions:
+  - condition: state
+    entity_id: group.people
+    state: home
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      device_id:
+      - 77eab15b63cc0ac50aaaa591095f387f
+      - 8452011ed8d7923ed4d54a9cf16327c5
+      - 0e9cd1caaedd880ca6466330e9995b32
+  mode: single
+- id: '1736026101338'
+  alias: Allarme | Save snapshots
+  description: ''
+  triggers:
+  - device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: arming
+    trigger: device
+  conditions: []
+  actions:
+  - repeat:
+      sequence:
+      - action: script.toggle
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - script.save_snapshot_ingresso_e_cucina
+          - script.save_snapshot_salotto
+      - delay:
+          hours: 0
+          minutes: 5
+          seconds: 0
+      until:
+      - condition: device
+        device_id: c83200d541a3a10de05ad0510e61073d
+        domain: alarm_control_panel
+        entity_id: 856e7524b1969581ec49c10effd75ac9
+        type: is_disarmed
+  mode: single
+- id: '1739263906081'
+  alias: Air Purifier Bambine | Alert qualità dell'aria
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.air_purifier_cameretta_pm2_5
+    above: 15
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+    trigger: numeric_state
+  conditions:
+  - condition: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: is_disarmed
+  - condition: state
+    entity_id: input_boolean.holiday
+    state: 'off'
+  actions:
+  - action: notify.mobile_app_iphone_di_anna
+    metadata: {}
+    data:
+      message: Camera bambine qualità dell'aria inadeguata
+      title: Sperons
+  - action: notify.mobile_app_marco
+    metadata: {}
+    data:
+      message: Camera bambine qualità dell'aria inadeguata
+      title: Sperons
+  mode: single
+- id: '1741532815181'
+  alias: Lavatrice | Spegni se finito ciclo da 1 ora
+  description: ''
+  triggers:
+  - type: turned_off
+    device_id: 12de3d48188784b200562407cfe514f0
+    entity_id: 7e9abbe6c3a81125ea4cc97257443d78
+    domain: switch
+    trigger: device
+    for:
+      hours: 1
+      minutes: 0
+      seconds: 0
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 5d93d6fc2c3cc1025f4422859e906e92
+    entity_id: 97cfd66961f5c87e37acc51c2109d154
+    domain: switch
+  mode: single
+- id: '1742850667371'
+  alias: Temperatura | Bagno di Servizio | Warm Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_bagno_di_servizio
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - action: climate.set_hvac_mode
+    metadata: {}
+    data:
+      hvac_mode: heat
+    target:
+      area_id: 6ff3454502494386800f4195f39a87e5
+  mode: queued
+  max: 10
+- id: '1742850815107'
+  alias: Temperatura | Bagno Padronale | Warm Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_bagno_padronale
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - target:
+      device_id: caa6a9c8e1d2b8ed8f758d34f2ac4488
+    data:
+      temperature: 21
+    action: climate.set_temperature
+  mode: queued
+  max: 10
+- id: '1742850994498'
+  alias: Temperatura | Camera Bambine | Umidità elevata
+  description: ''
+  triggers:
+  - for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+    entity_id:
+    - sensor.ble_humidity_temperatura_camera_bambine
+    above: '70'
+    trigger: numeric_state
+  conditions:
+  - condition: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: is_disarmed
+  - condition: state
+    entity_id: input_boolean.holiday
+    state: 'off'
+  actions:
+  - action: notify.mobile_app_iphone_di_anna
+    metadata: {}
+    data:
+      message: Camera bambine umidità elevata
+      title: Sperons
+  - action: notify.mobile_app_marco
+    metadata: {}
+    data:
+      message: Camera bambine umidità elevata
+      title: Sperons
+  mode: single
+- id: '1742851076165'
+  alias: Temperatura | Camera Bambine | Temperatura elevata
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.ble_temperature_temperatura_camera_bambine
+    above: '24'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+    trigger: numeric_state
+  conditions:
+  - condition: device
+    device_id: c83200d541a3a10de05ad0510e61073d
+    domain: alarm_control_panel
+    entity_id: 856e7524b1969581ec49c10effd75ac9
+    type: is_disarmed
+  - condition: state
+    entity_id: input_boolean.holiday
+    state: 'off'
+  actions:
+  - action: notify.mobile_app_iphone_di_anna
+    metadata: {}
+    data:
+      message: Camera bambine temperatura elevata
+      title: Sperons
+  - action: notify.mobile_app_marco
+    metadata: {}
+    data:
+      message: Camera bambine temperatura elevata
+      title: Sperons
+  mode: single
+- id: '1742851220457'
+  alias: Temperatura | Camera Bambine | Warm Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_camera_bambine
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - action: climate.set_hvac_mode
+    metadata: {}
+    data:
+      hvac_mode: heat
+    target:
+      device_id: 8193184a17f7079b03d029b1deb4ce3f
+  mode: queued
+  max: 10
+- id: '1742977647628'
+  alias: Temperatura | Camera Matrimoniale | Warm Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_camera_da_letto
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - data:
+      temperature: 21
+    target:
+      device_id: 1612b639fa2be576fabaa53bdbdac59f
+    action: climate.set_temperature
+  mode: queued
+  max: 10
+- id: '1742981721011'
+  alias: Temperatura | Studio | Warm Mode
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.finestra_studio
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - data:
+      temperature: 21
+    target:
+      device_id: ba3585d6944421999760341e34949bb2
+    action: climate.set_temperature
+  mode: queued
+  max: 10
+- id: '1742981882144'
+  alias: Temperatura | Zona Giorno | Warm Mode
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.finestre_zona_giorno
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+    to: 'off'
+    trigger: state
+  conditions: []
+  actions:
+  - data:
+      temperature: 21
+    target:
+      device_id:
+      - 87a22287aecd7588d3917e8a0b6ad74b
+      - 1543db44fffa26ecbd2501f888bd069f
+    action: climate.set_temperature
+  mode: queued
+  max: 10
+- id: '1742982280264'
+  alias: Temperatura | Workday | Warm Mode
+  description: ''
+  triggers:
+  - at: 06:00:00
+    trigger: time
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: group.people
+      state: home
+    - condition: state
+      entity_id: binary_sensor.workday_sensor
+      state: 'on'
+  actions:
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_bagno_di_servizio
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_bagno_di_servizio_finestra_chiusa
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_bagno_padronale
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_bagno_padronale_finestra_chiusa
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_camera_bambine
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_camera_bambine_finestra_chiusa
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_camera_da_letto
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_camera_matrimoniale_finestra_chiusa
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestra_studio
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_studio_warm_mode
+  - if:
+    - condition: state
+      entity_id: binary_sensor.finestre_zona_giorno
+      state: 'off'
+    then:
+    - action: automation.trigger
+      metadata: {}
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.temperatura_zona_giorno_warm_mode
+  mode: queued
+  max: 10

@@ -1,0 +1,13 @@
+order:
+  - item: map
+    hide: true
+  - item: developer tools
+    href: /developer-tools/state
+    bottom: true
+  - item: overview
+  - item: mobile
+  - item: tablet
+  - item: history
+    bottom: true
+  - item: logbook
+    bottom: true

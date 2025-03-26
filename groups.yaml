@@ -1,0 +1,32 @@
+  all_lights:
+    name: Tutte le Luci
+    entities:
+      - light.faretti_anticamera
+      - light.bagno_di_servizio
+      - light.bagno_padronale
+      - light.balcone_sala
+      - light.camera_degli_ospiti
+      - light.faretti_cucina
+      - light.faretti_ingresso
+      - light.lampada_armadio_level_light_color_on_off
+      - light.parete_sala
+      - light.luce_sala
+      - light.luce_tavolo
+      - light.gateway_light_7811dcdeb4de
+
+  luci_zona_giorno:
+    name: Luci Zona Giorno
+    entities:
+      - light.faretti_cucina
+      - light.faretti_ingresso
+      - light.parete_sala
+      - light.luce_sala
+      - light.luce_tavolo
+      - light.gateway_light_7811dcdeb4de
+      
+  people:
+    name: Family
+    entities:
+      - person.marco
+      - person.anna
+      - person.nonna_lidia

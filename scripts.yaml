@@ -1,0 +1,28 @@
+save_snapshot_ingresso_e_cucina:
+  alias: Save Snapshot Ingresso e Cucina
+  sequence:
+  - data: {}
+    action: blink.trigger_camera
+    target:
+      device_id: d4a92945db40fb464a42131aa3735a82
+  - action: camera.snapshot
+    target:
+      device_id: d4a92945db40fb464a42131aa3735a82
+    data:
+      filename: /tmp/ingresso.jpg
+  mode: single
+  icon: mdi:camera
+save_snapshot_salotto:
+  alias: Save Snapshot Salotto
+  sequence:
+  - data: {}
+    action: blink.trigger_camera
+    target:
+      device_id: e152c32bb0a8c86f07de5290c8429271
+  - data:
+      filename: /tmp/salotto.jpg
+    action: camera.snapshot
+    target:
+      device_id: e152c32bb0a8c86f07de5290c8429271
+  mode: single
+  icon: mdi:camera
