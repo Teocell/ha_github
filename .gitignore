@@ -1,9 +1,46 @@
+# ⚠️ File sensibili
 secrets.yaml
+
+# 🧠 File del database e backup
+home-assistant_v2.db
+home-assistant_v2.db-shm
+home-assistant_v2.db-wal
 *.db
-*.log
+*.db-shm
+*.db-wal
+
+# 📝 Log
 home-assistant.log
-home-assistant.log.1
+home-assistant.log.*
+*.log
+
+# ⚙️ Cartelle temporanee e compilate
 __pycache__/
-deps/
 *.pyc
-*.storage/
+
+# 📦 Dipendenze interne
+deps/
+*.egg-info/
+
+# 🧠 Config di HACS
+.custom_components/
+.hacs/
+hacsfiles/
+
+# ⚙️ Config di ESPHome
+/esphome/.esphome/
+
+# 🔒 Altri file locali o temporanei
+.storage/
+.cloud/
+*.tar
+*.tar.gz
+*.zip
+*.swp
+*.bak
+*.tmp
+
+# 🧪 Test locali o file da evitare nel repo
+test/
+tests/
+config/.DS_Store
