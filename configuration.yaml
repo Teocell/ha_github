@@ -8,17 +8,15 @@ homeassistant:
   allowlist_external_dirs:
     - '/tmp'
 
-automation: !include automations.yaml
+alarm_control_panel:
+  - platform: manual
+    name: Allarme
+    code: 1720
+    arming_time: 30
+    delay_time: 20
+    trigger_time: 300
 
-binary_sensor:
-  - platform: template
-    sensors:
-      riscaldamento:
-        friendly_name: "Riscaldamento"
-        device_class: cold
-        value_template: >-
-          {{ now().timestamp() >= states.input_datetime.riscaldamento_on.attributes.timestamp | int
-          and now().timestamp() <= states.input_datetime.riscaldamento_off.attributes.timestamp | int }}
+automation: !include automations.yaml
 
 bluetooth:
 
@@ -119,6 +117,43 @@ input_datetime:
     has_date: true
     has_time: false
     icon: mdi:console-network-outline
+
+input_number:
+  tende_rad_min:
+    name: Tende - Radiazione minima (W/m²)
+    min: 0
+    max: 1200
+    step: 10
+    unit_of_measurement: "W/m²"
+    icon: mdi:white-balance-sunny
+    initial: 300      # sotto questo valore non si estende
+
+  tende_rad_max:
+    name: Tende - Radiazione massima (W/m²)
+    min: 200
+    max: 1200
+    step: 10
+    unit_of_measurement: "W/m²"
+    icon: mdi:white-balance-sunny
+    initial: 800      # oltre questo valore = estensione massima
+
+  tende_pos_min:
+    name: Tende - Estensione minima (%)
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:arrow-expand-horizontal
+    initial: 20       # se vuoi “tutto su” quando scatta, metti 0
+
+  tende_pos_max:
+    name: Tende - Estensione massima (%)
+    min: 50
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:arrow-expand-horizontal
+    initial: 95
 
 ios:
 
@@ -253,11 +288,45 @@ recorder:
     event_types:
       - call_service # Don't record service calls
 
+rest_command:
+  n8n_new_device:
+    url: "http://localhost:8081/webhook/new-device"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+    payload: >
+      {
+        "name": "{{ name }}",
+        "mac": "{{ mac }}",
+        "ip": "{{ ip }}"
+      }
+
+
 scene: !include scenes.yaml
 
 script: !include scripts.yaml
 
 sensor:
+  - platform: filter
+    name: Solar Radiation (SMA)
+    entity_id: sensor.ilegna18_solar_radiation
+    filters:
+      - filter: time_simple_moving_average
+        window_size: "00:05:00"   # media degli ultimi 5 minuti
+        precision: 0              # arrotonda all'intero
+
+shell_command:
+  git_commit_push: >-
+    bash -c 'cd /config &&
+    git add -A &&
+    if ! git diff --cached --quiet; then
+      git -c user.name="HA Bot" -c user.email="ha@local"
+      commit -m "Auto backup: {{ now().strftime("%Y-%m-%d %H:%M") }}"; 
+      git push origin main;
+    else
+      echo "No changes to commit";
+    fi'
+
 
 spotcast:
   sp_dc: !secret sp_dc
@@ -282,6 +351,39 @@ system_health:
 system_log:
   fire_event: true
 
+template:
+  - sensor:
+      - name: "tende_posizione_desiderata"
+        unit_of_measurement: "%"
+        state: >
+          {% set rad = states('sensor.solar_radiation_sma')|float(0) %}
+          {% set elev = state_attr('sun.sun','elevation')|float(-90) %}
+          {% set azi  = state_attr('sun.sun','azimuth')|float(0) %}
+          {% set fac_min = 110 %}
+          {% set fac_max = 260 %}
+          {% set rmin = states('input_number.tende_rad_min')|float(300) %}
+          {% set rmax = states('input_number.tende_rad_max')|float(800) %}
+          {% set pmin = states('input_number.tende_pos_min')|float(20) %}
+          {% set pmax = states('input_number.tende_pos_max')|float(95) %}
+          {% if elev < 5 or azi < fac_min or azi > fac_max %}
+            0
+          {% else %}
+            {% if rad <= rmin %}
+              0
+            {% elif rad >= rmax %}
+              {{ pmax|round(0) }}
+            {% else %}
+              {% set ratio = (rad - rmin) / (rmax - rmin) %}
+              {{ (pmin + ratio * (pmax - pmin))|round(0) }}
+            {% endif %}
+          {% endif %}
+          
+  - binary_sensor:
+    - device_class: cold
+      default_entity_id: binary_sensor.riscaldamento
+      name: Riscaldamento
+      state: '{{ now().timestamp() >= states.input_datetime.riscaldamento_on.attributes.timestamp | int and now().timestamp() <= states.input_datetime.riscaldamento_off.attributes.timestamp | int }}'
+          
 # Text to speech
 tts:
   - platform: google_translate

@@ -1,42 +1,21 @@
 """
-    A collection of utilities to help managing the Meross device protocol
+A collection of utilities to help managing the Meross device protocol
 """
 
 import asyncio
 from dataclasses import dataclass
-from hashlib import md5
 import json
 import re
 from time import time
-import typing
-from uuid import uuid4
+from typing import TYPE_CHECKING
 
-from . import const as mc, namespaces as mn
+from .protocol import const as mc
 
-MerossNamespaceType = str
-MerossMethodType = str
-MerossHeaderType = typing.TypedDict(
-    "MerossHeaderType",
-    {
-        "messageId": str,
-        "namespace": str,
-        "method": str,
-        "payloadVersion": int,
-        "triggerSrc": typing.NotRequired[str],
-        "from": str,
-        "uuid": typing.NotRequired[str],
-        "timestamp": int,
-        "timestampMs": int,
-        "sign": str,
-    },
-)
-MerossPayloadType = dict[str, typing.Any]
-MerossMessageType = typing.TypedDict(
-    "MerossMessageType", {"header": MerossHeaderType, "payload": MerossPayloadType}
-)
-MerossRequestType = tuple[MerossNamespaceType, MerossMethodType, MerossPayloadType]
-KeyType = typing.Union[MerossHeaderType, str, None]
+if TYPE_CHECKING:
+    from typing import Any, Callable, Final, Iterable, Mapping
 
+    from protocol.message import MerossResponse
+    from protocol.types import ChannelPayload, MerossPayloadType, MerossRequestType
 
 try:
     from random import randint
@@ -110,7 +89,7 @@ def json_loads(s: str):
 #
 # General purpose utilities for payload handling
 #
-def get_element_by_key(payload: list, key: str, value: object) -> dict:
+def get_element_by_key[_T: dict](payload: list[_T], key: str, value) -> _T:
     """
     scans the payload(list) looking for the first item matching
     the key value. Usually looking for the matching channel payload
@@ -124,21 +103,51 @@ def get_element_by_key(payload: list, key: str, value: object) -> dict:
     )
 
 
-def get_element_by_key_safe(payload, key: str, value) -> dict | None:
+def get_element_by_key_safe[_T: dict](payload: list[_T], key: str, value) -> _T | None:
     """
     scans the payload (expecting a list) looking for the first item matching
     the key value. Usually looking for the matching channel payload
     inside list payloads
     """
-    try:
-        for p in payload:
-            if p.get(key) == value:
+    for p in payload:
+        try:
+            if p[key] == value:
                 return p
-    except Exception:
-        return None
+        except KeyError:
+            continue
+    return None
 
 
-def update_dict_strict(dst_dict: dict, src_dict: dict):
+def delete_element_by_key(payload: list[dict], key: str, value):
+    """
+    scans the payload(list) looking for the first item matching
+    the key value. Usually looking for the matching channel payload
+    inside list payloads
+    """
+    for p in tuple(payload):
+        try:
+            if p[key] == value:
+                payload.remove(p)
+        except KeyError:
+            pass
+
+
+def merge_dicts(dict1: "Mapping", dict2: "Mapping") -> "Any":
+    """
+    Recursively merge two dictionaries.
+    """
+    result = dict(dict1)
+    for key, value in dict2.items():
+        if (type(value) is dict) and (key in result):
+            result_value = result[key]
+            if type(result_value) is dict:
+                result[key] = merge_dicts(result_value, value)
+                continue
+        result[key] = value
+    return result
+
+
+def update_dict_strict(dst_dict: dict, src_dict: "Mapping"):
     """Updates (merge) the dst_dict with values from src_dict checking
     their existence in dst_dict before applying. Used in emulators to update
     current state when receiving a SET payload. This is needed for testing so
@@ -149,20 +158,16 @@ def update_dict_strict(dst_dict: dict, src_dict: dict):
         if key in dst_dict:
             dst_value = dst_dict[key]
             dst_type = type(dst_value)
-            src_type = type(value)
-            if dst_type is dict:
-                if src_type is dict:
+            if dst_type is type(value):
+                if dst_type is dict:
                     update_dict_strict(dst_value, value)
-            elif dst_type is list:
-                if src_type is list:
-                    dst_dict[key] = value # lists ?!
-            else:
-                dst_dict[key] = value
+                else:
+                    dst_dict[key] = value
 
 
-def update_dict_strict_by_key(
-    dst_lst: list[dict], src_dict: dict, key: str = mc.KEY_CHANNEL
-) -> dict:
+def update_dict_strict_by_key[_T: "MerossPayloadType"](
+    dst_lst: "Iterable[_T]", src_dict: "Mapping", key: str = mc.KEY_CHANNEL
+) -> _T:
     """
     Much like get_element_by_key scans the dst list looking for the first item matching
     the key value to the corresponding one in src_dict. Usually looking for the matching
@@ -177,7 +182,7 @@ def update_dict_strict_by_key(
     raise KeyError(f"No match for key '{key}' on value:'{str(key_value)}' in {dst_lst}")
 
 
-def extract_dict_payloads(payload):
+def extract_dict_payloads[_T](payload: _T | list[_T]) -> "Iterable[_T]":
     """
     Helper generator to manage payloads which might carry list of payloads:
     payload = { "channel": 0, "onoff": 1}
@@ -189,45 +194,6 @@ def extract_dict_payloads(payload):
             yield p
     elif payload:  # assert isinstance(payload, dict)
         yield payload
-
-
-#
-# Custom Exceptions
-#
-class MerossProtocolError(Exception):
-    """
-    signal a protocol error like:
-    - missing header keys
-    - application layer ERROR(s)
-
-    - response is the full response payload
-    - reason is an additional context error
-    """
-
-    def __init__(self, response, reason: object | None = None):
-        self.response = response
-        self.reason = reason
-        super().__init__(reason)
-
-
-class MerossKeyError(MerossProtocolError):
-    """
-    signal a protocol key error (wrong key)
-    reported by device
-    """
-
-    def __init__(self, response: "MerossResponse"):
-        super().__init__(response, "Invalid key")
-
-
-class MerossSignatureError(MerossProtocolError):
-    """
-    signal a protocol signature error detected
-    when validating the received header
-    """
-
-    def __init__(self, response: "MerossResponse"):
-        super().__init__(response, "Signature error")
 
 
 @dataclass
@@ -254,123 +220,6 @@ class HostAddress:
 
     def __str__(self) -> str:
         return f"{self.host}:{self.port}"
-
-
-#
-# Low level message building helpers
-#
-def compute_message_signature(messageid: str, key: str, timestamp):
-    return md5(
-        "".join((messageid, key, str(timestamp))).encode("utf-8"), usedforsecurity=False
-    ).hexdigest()
-
-
-def compute_message_encryption_key(uuid: str, key: str, mac: str):
-    return md5(
-        "".join((uuid[3:22], key[1:9], mac, key[10:28])).encode("utf-8"),
-        usedforsecurity=False,
-    ).hexdigest()
-
-
-def build_message(
-    namespace: str,
-    method: str,
-    payload: MerossPayloadType,
-    key: KeyType,
-    from_: str,
-    messageid: str | None = None,
-) -> MerossMessageType:
-    if isinstance(key, dict):
-        key[mc.KEY_NAMESPACE] = namespace
-        key[mc.KEY_METHOD] = method
-        key[mc.KEY_PAYLOADVERSION] = 1
-        key[mc.KEY_FROM] = from_
-        return {mc.KEY_HEADER: key, mc.KEY_PAYLOAD: payload}  # type: ignore
-    else:
-        messageid = messageid or uuid4().hex
-        timestamp = int(time())
-        return {
-            mc.KEY_HEADER: {
-                mc.KEY_MESSAGEID: messageid,
-                mc.KEY_NAMESPACE: namespace,
-                mc.KEY_METHOD: method,
-                mc.KEY_PAYLOADVERSION: 1,
-                mc.KEY_FROM: from_,
-                # mc.KEY_FROM: "/app/0-0/subscribe",
-                # "from": "/appliance/9109182170548290882048e1e9522946/publish",
-                mc.KEY_TIMESTAMP: timestamp,
-                mc.KEY_TIMESTAMPMS: 0,
-                mc.KEY_SIGN: compute_message_signature(messageid, key or "", timestamp),
-            },
-            mc.KEY_PAYLOAD: payload,
-        }
-
-
-def build_message_reply(
-    header: MerossHeaderType,
-    payload: MerossPayloadType,
-) -> MerossMessageType:
-    """
-    builds a message by replying the full header. This is used
-    in replies to some PUSH sent by devices where it appears
-    (from meross broker protocol inspection - see #346)
-    the broker doesn't calculate a new signature but just replies
-    the incoming header data
-    """
-    header = header.copy()
-    header.pop(mc.KEY_UUID, None)
-    return {
-        mc.KEY_HEADER: header,
-        mc.KEY_PAYLOAD: payload,
-    }
-
-
-def check_message_strict(message: "MerossResponse | None"):
-    """
-    Does a formal check of the message structure also raising a
-    typed exception if formally correct but carrying a protocol error
-    """
-    if not message:
-        raise MerossProtocolError(message, "No response")
-    try:
-        payload = message[mc.KEY_PAYLOAD]
-        header = message[mc.KEY_HEADER]
-        header[mc.KEY_NAMESPACE]
-        if header[mc.KEY_METHOD] == mc.METHOD_ERROR:
-            p_error = payload[mc.KEY_ERROR]
-            if p_error.get(mc.KEY_CODE) == mc.ERROR_INVALIDKEY:
-                raise MerossKeyError(message)
-            else:
-                raise MerossProtocolError(message, p_error)
-        return message
-    except KeyError as error:
-        raise MerossProtocolError(message, str(error)) from error
-
-
-#
-# Various helpers to extract some meaningful data from payloads
-#
-def get_message_uuid(header: MerossHeaderType):
-    return header.get(mc.KEY_UUID) or mc.RE_PATTERN_TOPIC_UUID.match(header[mc.KEY_FROM]).group(1)  # type: ignore
-
-
-def get_replykey(header: MerossHeaderType, key: KeyType) -> KeyType:
-    """
-    checks header signature against key:
-    if ok return sign itsef else return the full header { "messageId", "timestamp", "sign", ...}
-    in order to be able to use it in a reply scheme
-    **UPDATE 28-03-2021**
-    the 'reply scheme' hack doesnt work on mqtt but works on http: this code will be left since it works if the key is correct
-    anyway and could be reused in a future attempt
-    """
-    if isinstance(key, str):
-        sign = compute_message_signature(
-            header[mc.KEY_MESSAGEID], key, header[mc.KEY_TIMESTAMP]
-        )
-        if sign == header[mc.KEY_SIGN]:
-            return key
-
-    return header
 
 
 def get_macaddress_from_uuid(uuid: str):
@@ -456,150 +305,6 @@ def get_mts_digest(p_subdevice_digest: dict) -> dict | None:
 
 
 #
-# 'Higher level' message representations
-#
-class MerossMessage(dict):
-    """
-    Base (almost) abstract class for different source of messages that
-    need to be sent to the device (or received from).
-    The actual implementation will setup the slots
-    """
-
-    namespace: str
-    method: str
-    messageid: str
-    payload: MerossPayloadType
-
-    __slots__ = (
-        "namespace",
-        "method",
-        "messageid",
-        "payload",
-        "_json_str",
-    )
-
-    def __init__(self, message: dict, json_str: str | None = None):
-        self._json_str = json_str
-        super().__init__(message)
-
-    def json(self):
-        if not self._json_str:
-            self._json_str = JSON_ENCODER.encode(self)
-        return self._json_str
-
-    @staticmethod
-    def decode(json_str: str):
-        return MerossMessage(JSON_DECODER.decode(json_str), json_str)
-
-
-class MerossResponse(MerossMessage):
-    """Helper for messages received from a device"""
-
-    def __init__(self, json_str: str):
-        super().__init__(JSON_DECODER.decode(json_str), json_str)
-
-
-class MerossRequest(MerossMessage):
-    """Helper for messages to be sent"""
-
-    def __init__(
-        self,
-        key: str,
-        namespace: str,
-        method: str = mc.METHOD_GET,
-        payload: MerossPayloadType | None = None,
-        from_: str = mc.MANUFACTURER,
-    ):
-        self.namespace = namespace
-        self.method = method
-        self.messageid = uuid4().hex
-        if payload is None:
-            if method is mc.METHOD_GET:
-                self.payload = mn.NAMESPACES[namespace].payload_get
-            else:
-                assert method is mc.METHOD_PUSH
-                self.payload = mn.Namespace.DEFAULT_PUSH_PAYLOAD
-        else:
-            self.payload = payload
-        timestamp = int(time())
-        super().__init__(
-            {
-                mc.KEY_HEADER: {
-                    mc.KEY_MESSAGEID: self.messageid,
-                    mc.KEY_NAMESPACE: namespace,
-                    mc.KEY_METHOD: method,
-                    mc.KEY_PAYLOADVERSION: 1,
-                    mc.KEY_FROM: from_,
-                    mc.KEY_TIMESTAMP: timestamp,
-                    mc.KEY_TIMESTAMPMS: 0,
-                    mc.KEY_SIGN: compute_message_signature(
-                        self.messageid, key, timestamp
-                    ),
-                },
-                mc.KEY_PAYLOAD: self.payload,
-            }
-        )
-
-
-class MerossPushReply(MerossMessage):
-    """
-    Builds a message by replying the full header. This is used
-    in replies to some PUSH sent by devices where it appears
-    (from meross broker protocol inspection - see #346)
-    the broker doesn't calculate a new signature but just replies
-    the incoming header data.
-    """
-
-    def __init__(self, header: MerossHeaderType, payload: MerossPayloadType):
-        self.namespace = header[mc.KEY_NAMESPACE]
-        self.method = header[mc.KEY_METHOD]
-        self.messageid = header[mc.KEY_MESSAGEID]
-        self.payload = payload
-        header = header.copy()
-        header.pop(mc.KEY_UUID, None)
-        header[mc.KEY_TRIGGERSRC] = "CloudControl"
-        super().__init__(
-            {
-                mc.KEY_HEADER: header,
-                mc.KEY_PAYLOAD: payload,
-            }
-        )
-
-
-class MerossAckReply(MerossMessage):
-    """
-    Builds a response ascknowledge message by signing an incoming messageId.
-    """
-
-    def __init__(
-        self, key: str, header: MerossHeaderType, payload: MerossPayloadType, from_: str
-    ):
-        self.namespace = header[mc.KEY_NAMESPACE]
-        self.method = mc.METHOD_ACK_MAP[header[mc.KEY_METHOD]]
-        self.messageid = header[mc.KEY_MESSAGEID]
-        self.payload = payload
-        timestamp = int(time())
-        super().__init__(
-            {
-                mc.KEY_HEADER: {
-                    mc.KEY_MESSAGEID: self.messageid,
-                    mc.KEY_NAMESPACE: self.namespace,
-                    mc.KEY_METHOD: self.method,
-                    mc.KEY_PAYLOADVERSION: 1,
-                    mc.KEY_FROM: from_,
-                    mc.KEY_TRIGGERSRC: "CloudControl",
-                    mc.KEY_TIMESTAMP: timestamp,
-                    mc.KEY_TIMESTAMPMS: 0,
-                    mc.KEY_SIGN: compute_message_signature(
-                        self.messageid, key, timestamp
-                    ),
-                },
-                mc.KEY_PAYLOAD: payload,
-            }
-        )
-
-
-#
 #
 #
 class MerossDeviceDescriptor:
@@ -608,38 +313,45 @@ class MerossDeviceDescriptor:
     device descriptor
     """
 
-    all: dict
-    ability: dict
-    digest: dict
-    control: dict
-    system: dict
-    hardware: dict
-    firmware: dict
-    online: dict
-    type: str
-    subType: str
-    hardwareVersion: str
-    uuid: str
-    macAddress: str
-    macAddress_fmt: str
-    innerIp: str | None
-    userId: str | None
-    firmwareVersion: str
-    time: dict
-    timezone: str | None
-    productname: str
-    productnametype: str
-    productmodel: str
+    if TYPE_CHECKING:
 
-    __slots__ = (
-        "payload",
-        "all",
-        "ability",
-        "digest",
-        "__dict__",
-    )
+        DYNAMIC_ATTRS: Final[Mapping[str, Callable[["MerossDeviceDescriptor"], Any]]]
 
-    _dynamicattrs = {
+        payload: Final[dict[str, Any]]
+        channels: Final[frozenset[int]]
+        all: dict[str, Any]
+        ability: dict[str, Any]
+        digest: dict[str, Any]
+        control: dict[str, Any]
+        system: dict[str, Any]
+        hardware: dict[str, Any]
+        firmware: dict[str, Any]
+        online: dict[str, Any]
+        type: str
+        subType: str
+        hardwareVersion: str
+        uuid: str
+        macAddress: str
+        macAddress_fmt: str
+        innerIp: str | None
+        userId: str | None
+        firmwareVersion: str
+        time: dict
+        timezone: str | None
+        productname: str
+        productnametype: str
+        productmodel: str
+        is_refoss: bool
+
+    NO_CHANNEL = frozenset()
+    SINGLE_CHANNEL = frozenset({0})
+    TYPE_CHANNELS_MAP = {
+        # some lookup when digest euristic parsing doesn't work
+        "em06": frozenset({1, 2, 3, 4, 5, 6}),
+    }
+
+    DYNAMIC_ATTRS = {
+        # TODO: use cached_property
         mc.KEY_ALL: lambda _self: _self.payload.get(mc.KEY_ALL, {}),
         mc.KEY_ABILITY: lambda _self: _self.payload.get(mc.KEY_ABILITY, {}),
         mc.KEY_DIGEST: lambda _self: _self.all.get(mc.KEY_DIGEST, {}),
@@ -662,13 +374,52 @@ class MerossDeviceDescriptor:
         "productname": lambda _self: get_productnameuuid(_self.type, _self.uuid),
         "productnametype": lambda _self: get_productnametype(_self.type),
         "productmodel": lambda _self: f"{_self.type} {_self.hardware.get(mc.KEY_VERSION, '')}",
+        "is_refoss": lambda _self: mc.RefossModel.match(_self.type),
     }
+
+    __slots__ = (
+        "payload",
+        "channels",
+        "all",
+        "ability",
+        "digest",
+        "__dict__",
+    )
 
     def __init__(self, payload: dict):
         self.payload = payload
+        # infer supported channels from device type
+        device_type = self.type
+        for _type, _channels in MerossDeviceDescriptor.TYPE_CHANNELS_MAP.items():
+            if device_type.startswith(_type):
+                self.channels = _channels
+                break
+        else:
+            # infer from digest payload
+            _channels = set()
+
+            def _search_channels(d: dict):
+                try:
+                    channel = d[mc.KEY_CHANNEL]
+                    if isinstance(channel, int):
+                        _channels.add(channel)
+                except Exception:
+                    for _value in d.values():
+                        _value_type = type(_value)
+                        if _value_type is dict:
+                            _search_channels(_value)
+                        elif _value_type is list:
+                            for item in _value:
+                                if type(item) is dict:
+                                    _search_channels(item)
+
+            _search_channels(self.digest)
+            self.channels = (
+                frozenset(_channels) if _channels else MerossDeviceDescriptor.NO_CHANNEL
+            )
 
     def __getattr__(self, name):
-        value = MerossDeviceDescriptor._dynamicattrs[name](self)
+        value = MerossDeviceDescriptor.DYNAMIC_ATTRS[name](self)
         setattr(self, name, value)
         return value
 
@@ -676,8 +427,8 @@ class MerossDeviceDescriptor:
         """
         reset the cached pointers
         """
-        self.payload |= payload
-        for key in MerossDeviceDescriptor._dynamicattrs.keys():
+        self.payload.update(payload)
+        for key in MerossDeviceDescriptor.DYNAMIC_ATTRS:
             # don't use hasattr() or so to inspect else the whole
             # dynamic attrs logic gets f...d
             try:

@@ -1,0 +1,207 @@
+blueprint:
+  name: AC Room Controller (Samsung WindFree / SmartThings)
+  description: >
+    Controllo stanza per clima: cool con isteresi, dry su umidità,
+    profilo notte silenzioso e presenza. Compatibile con climate.* da SmartThings.
+  domain: automation
+  input:
+    climate_entity:
+      name: Climatizzatore (entità climate)
+      selector:
+        entity:
+          domain: climate
+
+    temp_sensor:
+      name: Sensore temperatura
+      selector:
+        entity:
+          domain: sensor
+
+    humidity_sensor:
+      name: Sensore umidità
+      selector:
+        entity:
+          domain: sensor
+
+    presence_entity:
+      name: Presenza (opzionale person/group/binary_sensor)
+      default: ""
+      selector:
+        entity: {}
+
+    setpoint_helper:
+      name: Setpoint (input_number)
+      selector:
+        entity:
+          domain: input_number
+
+    hysteresis_helper:
+      name: Isteresi (input_number)
+      selector:
+        entity:
+          domain: input_number
+
+    night_offset_helper:
+      name: Night offset (input_number)
+      selector:
+        entity:
+          domain: input_number
+
+    humidity_dry_threshold_helper:
+      name: Soglia umidità per DRY (input_number)
+      selector:
+        entity:
+          domain: input_number
+
+    night_start:
+      name: Inizio fascia notte
+      default: "22:00:00"
+      selector:
+        time: {}
+
+    night_end:
+      name: Fine fascia notte
+      default: "07:00:00"
+      selector:
+        time: {}
+
+    wfh_boolean:
+      name: Work From Home (opzionale)
+      default: ""
+      selector:
+        entity:
+          domain: input_boolean
+
+    window_sensor:
+      name: Finestra aperta (opzionale)
+      default: ""
+      selector:
+        entity:
+          domain: binary_sensor
+
+mode: queued
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: !input temp_sensor
+  - platform: state
+    entity_id: !input humidity_sensor
+  - platform: state
+    entity_id: !input setpoint_helper
+  - platform: state
+    entity_id: !input hysteresis_helper
+  - platform: time_pattern
+    minutes: "/5"
+
+variables:
+  climate: !input climate_entity
+  temp_entity: !input temp_sensor
+  hum_entity: !input humidity_sensor
+  sp_entity: !input setpoint_helper
+  hyst_entity: !input hysteresis_helper
+  night_off_entity: !input night_offset_helper
+  dry_thr_entity: !input humidity_dry_threshold_helper
+  presence_entity: !input presence_entity
+  wfh_boolean: !input wfh_boolean
+  window_sensor: !input window_sensor
+  night_start: !input night_start
+  night_end: !input night_end
+
+  t: "{{ states(temp_entity) | float(0) }}"
+  h: "{{ states(hum_entity) | float(0) }}"
+  setpoint: "{{ states(sp_entity) | float(24) }}"
+  hyst: "{{ states(hyst_entity) | float(0.5) }}"
+  night_offset: "{{ states(night_off_entity) | float(1) }}"
+  dry_thr: "{{ states(dry_thr_entity) | float(65) }}"
+
+  is_night: >
+    {% set nowt = now().strftime('%H:%M:%S') %}
+    {% if night_start <= night_end %}
+      {{ nowt >= night_start and nowt < night_end }}
+    {% else %}
+      {{ nowt >= night_start or  nowt < night_end }}
+    {% endif %}
+
+  presence_ok: >
+    {% if presence_entity == "" %}
+      true
+    {% else %}
+      {{ states(presence_entity) in ["home","on","True","true"] }}
+    {% endif %}
+
+  wfh_on: >
+    {% if wfh_boolean == "" %} false
+    {% else %} {{ is_state(wfh_boolean,'on') }}
+    {% endif %}
+
+  window_open: >
+    {% if window_sensor == "" %}
+      false
+    {% else %}
+      {% set s = states(window_sensor) | lower %}
+      {{ s in ["on", "open"] }}
+    {% endif %}
+
+  eff_set: >
+    {% set base = setpoint %}
+    {% set adj = base
+      + ( night_offset if is_night else 0 )
+      + ( -0.5 if (wfh_on and not is_night) else 0 ) %}
+    {{ adj }}
+
+condition: []
+
+action:
+  - choose:
+      - conditions: "{{ window_open }}"
+        sequence:
+          - service: climate.turn_off
+            target:
+              entity_id: "{{ climate }}"
+
+      - conditions: "{{ not presence_ok }}"
+        sequence:
+          - service: climate.turn_off
+            target:
+              entity_id: "{{ climate }}"
+
+      - conditions: >
+          {{ h >= dry_thr
+             and t <= (eff_set + hyst)
+             and t >= (eff_set - 1.5)
+             and not window_open }}
+        sequence:
+          - service: climate.set_hvac_mode
+            target:
+              entity_id: "{{ climate }}"
+            data:
+              hvac_mode: dry
+
+      - conditions: "{{ t > (eff_set + hyst) and not window_open }}"
+        sequence:
+          - service: climate.set_hvac_mode
+            target:
+              entity_id: "{{ climate }}"
+            data:
+              hvac_mode: cool
+          - service: climate.set_temperature
+            target:
+              entity_id: "{{ climate }}"
+            data:
+              temperature: "{{ eff_set }}"
+          - choose:
+              - conditions: "{{ is_night }}"
+                sequence:
+                  - service: climate.set_fan_mode
+                    target:
+                      entity_id: "{{ climate }}"
+                    data:
+                      fan_mode: low
+
+      - conditions: "{{ t < (eff_set - hyst) }}"
+        sequence:
+          - service: climate.turn_off
+            target:
+              entity_id: "{{ climate }}"
+    default: []

@@ -1,0 +1,104 @@
+sensor:
+  # ---------------------------
+  # CAMERA DELLE BAMBINE
+  # ---------------------------
+  - platform: min_max
+    name: "Camera Bambine - Temperatura (media)"
+    type: mean
+    round_digits: 1
+    entity_ids:
+      - sensor.air_purifier_cameretta_temperatura
+      - sensor.camera_delle_bambine_air_conditioner_temperatura
+      - sensor.ble_temperature_temperatura_camera_bambine
+    unique_id: camera_bambine_temp_media
+
+  - platform: min_max
+    name: "Camera Bambine - Umidità (media)"
+    type: mean
+    round_digits: 0
+    entity_ids:
+      # Sostituisci con le 3 entità di umidità corrispondenti
+      - sensor.air_purifier_cameretta_umidita
+      - sensor.camera_delle_bambine_air_conditioner_umidita
+      - sensor.ble_humidity_temperatura_camera_bambine
+    unique_id: camera_bambine_humidity_media
+
+  # ---------------------------
+  # ZONA GIORNO
+  # ---------------------------
+  - platform: min_max
+    name: "Zona Giorno - Temperatura (media)"
+    type: mean
+    round_digits: 1
+    entity_ids:
+      # Sostituisci con le 3 entità di umidità corrispondenti
+      - sensor.air_purifier_zona_giorno_temperature
+      - sensor.blink_salotto_temperature
+      - sensor.salotto_air_conditioner_temperatura
+      - sensor.sensore_movimento_cucina_device_temperature
+      - sensor.sensore_movimento_salotto_temperatura_del_dispositivo
+      - sensor.sensore_perdite_lavatrice_device_temperature
+      - sensor.ble_temperature_temperatura_cucina
+      - sensor.temperatura_ingresso_temperature
+      - sensor.temperatura_salotto_temperature_2
+      - sensor.valvola_termostatica_cucina_air_temperature_4
+      - sensor.valvola_termostatica_salotto_air_temperature
+    unique_id: zona_giorno_temp_media
+
+  - platform: min_max
+    name: "Zona Giorno - Umidità (media)"
+    type: mean
+    round_digits: 0
+    entity_ids:
+      - sensor.air_purifier_zona_giorno_humidity
+      - ssensor.salotto_air_conditioner_umidita
+      - sensor.ble_humidity_temperatura_cucina
+      - sensor.temperatura_ingresso_humidity
+      - sensor.temperatura_salotto_humidity_2
+    unique_id: zona_giorno_humidity_media
+
+  # ---------------------------
+  # STUDIO
+  # ---------------------------
+  - platform: min_max
+    name: "Studio - Temperatura (media)"
+    type: mean
+    round_digits: 1
+    entity_ids:
+      - sensor.sensore_movimento_studio_device_temperature_2
+      - sensor.studio_air_conditioner_temperatura
+      - sensor.temperatura_studio_temperature_4
+      - sensor.valvola_termostatica_studio_air_temperature_2
+    unique_id: studio_temp_media
+
+  - platform: min_max
+    name: "Studio - Umidità (media)"
+    type: mean
+    round_digits: 0
+    entity_ids:
+      - sensor.studio_air_conditioner_umidita
+      - sensor.temperatura_studio_humidity_4
+    unique_id: studio_humidity_media
+
+  # ---------------------------
+  # CAMERA MATRIMONIALE
+  # ---------------------------
+  - platform: min_max
+    name: "Camera Matrimoniale - Temperatura (media)"
+    type: mean
+    round_digits: 1
+    entity_ids:
+      - sensor.camera_matrimoniale_air_conditioner_temperatura
+      - sensor.ble_temperature_temperatura_camera_da_letto
+      - sensor.valvola_termostatica_camera_da_letto_air_temperature_3
+    unique_id: camera_matrimoniale_temp_media
+
+  - platform: min_max
+    name: "Camera Matrimoniale - Umidità (media)"
+    type: mean
+    round_digits: 0
+    entity_ids:
+      - sensor.temperatura_camera_da_letto_humidity_3
+      - sensor.ble_humidity_temperatura_camera_da_letto
+      - sensor.camera_matrimoniale_air_conditioner_umidita
+    unique_id: camera_matrimoniale_humidity_media

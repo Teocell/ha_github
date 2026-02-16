@@ -1,13 +1,27 @@
 """Constants for the Meross IoT local LAN integration."""
 
+import enum
 import logging
-from typing import Final, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Final, NotRequired, TypedDict
 
 from homeassistant import const as hac
 
-from .merossclient import cloudapi, const as mc
+from .merossclient import cloudapi
+from .merossclient.protocol import const as mc
+
+if TYPE_CHECKING:
+    from typing import Any, Mapping
+
 
 DOMAIN: Final = "meross_lan"
+
+
+class DeviceType(enum.Enum):
+    DEVICE = 1
+    HUB = 2
+    SUBDEVICE = 3
+
+
 #########################
 # common ConfigEntry keys
 #########################
@@ -37,6 +51,16 @@ CONF_TRACE_TIMEOUT_DEFAULT: Final = 600
 CONF_TRACE_MAXSIZE: Final = 262144  # or when MAXSIZE exceeded
 # folder where to store traces
 CONF_TRACE_DIRECTORY: Final = "traces"
+# versioning
+CONF_TRACE_VERSION: Final = 3
+CONF_TRACE_COLUMNS: Final = ["time", "rxtx", "protocol", "method", "namespace", "data"]
+if TYPE_CHECKING:
+
+    class TracingHeaderType(TypedDict):
+        version: int
+        config: Mapping[str, Any]
+        state: Mapping[str, Any]
+        trace: NotRequired[list[list]]
 
 
 class ManagerConfigType(TypedDict):
@@ -72,7 +96,7 @@ class HubConfigType(ApiProfileConfigType):
 
 
 ###############################
-# MerossDevice ConfigEntry keys
+# Device ConfigEntry keys
 ###############################
 CONF_DEVICE_ID: Final = hac.CONF_DEVICE_ID
 # device key eventually retrieved from Meross account
@@ -161,15 +185,8 @@ SERVICE_REQUEST = "request"
 CONF_NOTIFYRESPONSE = "notifyresponse"
 """key used in service 'request' call"""
 CONF_PROFILE_ID_LOCAL: Final = ""
-"""label for MerossApi as a 'fake' cloud profile"""
+"""label for ComponentApi as a 'fake' cloud profile"""
 
-#
-# some common entitykeys
-#
-DND_ID: Final = "dnd"
-SIGNALSTRENGTH_ID: Final = "signal_strength"
-CONSUMPTIONX_SENSOR_KEY: Final = "energy"
-ELECTRICITY_SENSOR_KEY: Final = "energy_estimate"
 #
 # issues general consts
 #
@@ -179,8 +196,12 @@ ISSUE_DEVICE_ID_MISMATCH = "device_identity_mismatch"
 """raised when a device receives data from a different (uuid) appliance"""
 ISSUE_DEVICE_TIMEZONE = "device_timezone"
 """raised when a device timezone is not set or is anyway different from HA default"""
+ISSUE_HUB_SUBDEVICE_REMOVED = "hub_subdevice_removed"
+"""raised when an Hub SubDevice is no more available (unbinded) and the device_egistry needs cleanup."""
 
 # general working/configuration parameters
+PARAM_DEFAULT_KEY = "meross"
+"""Default key commonly used for local MQTT binded devices (MQTT Hub conf)"""
 PARAM_INFINITE_TIMEOUT = 2147483647  # inifinite epoch (2038 bug?)
 """the (infinite) timeout in order to disable timed schedules"""
 PARAM_COLDSTARTPOLL_DELAY = 2
@@ -199,20 +220,26 @@ PARAM_TRACING_ABILITY_POLL_TIMEOUT = 2
 """used to delay the iteration of abilities while tracing"""
 PARAM_ROLLERSHUTTER_TRANSITION_POLL_TIMEOUT = 2
 """used when polling the cover state to monitor an ongoing transition"""
-PARAM_CLOUDMQTT_UPDATE_PERIOD = 1795
-"""for polled entities over cloud MQTT use 'at least' this"""
+PARAM_CLOUDMQTT_UPDATE_PERIOD = 1195
+"""General polling period for entities over cloud MQTT use 'at least' this"""
 PARAM_CONFIG_UPDATE_PERIOD = 300
 """read device config polling period"""
 PARAM_SENSOR_FAST_UPDATE_PERIOD = 0
 """fast varying sensors polling period (this should lead to updates at every poll depending on polling policy)"""
+PARAM_SENSOR_FAST_UPDATE_CLOUD_PERIOD = 180
+"""fast varying sensors polling period over cloud mqtt"""
 PARAM_SENSOR_MEDIUM_UPDATE_PERIOD = 55
 """medium speed varying sensors polling period (not as critical as FAST_UPDATEs that need to be queried asap)"""
 PARAM_SENSOR_SLOW_UPDATE_PERIOD = 300
 """slowly varying sensors polling period"""
+PARAM_SENSOR_SLOW_UPDATE_CLOUD_PERIOD = 600
+"""slowly varying sensors polling period over cloud mqtt"""
 PARAM_DIAGNOSTIC_UPDATE_PERIOD = 300
 """read diagnostic sensors only every ... second"""
 PARAM_ENERGY_UPDATE_PERIOD = 55
 """read energy consumption only every ... second"""
+PARAM_ENERGY_UPDATE_CLOUD_PERIOD = 600
+"""read energy consumption over cloud mqtt only every ... second"""
 PARAM_GARAGEDOOR_TRANSITION_MAXDURATION = 60
 PARAM_GARAGEDOOR_TRANSITION_MINDURATION = 10
 PARAM_CLOUDPROFILE_DELAYED_SETUP_TIMEOUT = 5

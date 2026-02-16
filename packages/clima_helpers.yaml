@@ -1,0 +1,152 @@
+input_number:
+  # ZONA GIORNO
+  setpoint_zona_giorno:
+    name: Setpoint Zona Giorno
+    icon: mdi:thermometer
+    unit_of_measurement: "°C"
+    min: 18
+    max: 28
+    step: 0.5
+    mode: slider
+    initial: 24
+  hysteresis_zona_giorno:
+    name: Isteresi Zona Giorno
+    icon: mdi:sigma-lower
+    unit_of_measurement: "°C"
+    min: 0.2
+    max: 2.0
+    step: 0.1
+    mode: slider
+    initial: 0.5
+  night_offset_zona_giorno:
+    name: Night Offset Zona Giorno
+    icon: mdi:weather-night
+    unit_of_measurement: "°C"
+    min: -2.0
+    max: 2.0
+    step: 0.5
+    mode: slider
+    initial: 1.0
+  humidity_dry_threshold_zona_giorno:
+    name: Soglia Umidità DRY Zona Giorno
+    icon: mdi:water-percent
+    unit_of_measurement: "%"
+    min: 50
+    max: 80
+    step: 1
+    mode: slider
+    initial: 65
+
+  # STUDIO
+  setpoint_studio:
+    name: Setpoint Studio
+    icon: mdi:thermometer
+    unit_of_measurement: "°C"
+    min: 18
+    max: 28
+    step: 0.5
+    mode: slider
+    initial: 24
+  hysteresis_studio:
+    name: Isteresi Studio
+    icon: mdi:sigma-lower
+    unit_of_measurement: "°C"
+    min: 0.2
+    max: 2.0
+    step: 0.1
+    mode: slider
+    initial: 0.5
+  night_offset_studio:
+    name: Night Offset Studio
+    icon: mdi:weather-night
+    unit_of_measurement: "°C"
+    min: -2.0
+    max: 2.0
+    step: 0.5
+    mode: slider
+    initial: 1.0
+  humidity_dry_threshold_studio:
+    name: Soglia Umidità DRY Studio
+    icon: mdi:water-percent
+    unit_of_measurement: "%"
+    min: 50
+    max: 80
+    step: 1
+    mode: slider
+    initial: 65
+
+  # CAMERA MATRIMONIALE
+  setpoint_camera_matrimoniale:
+    name: Setpoint Camera Matrimoniale
+    icon: mdi:thermometer
+    unit_of_measurement: "°C"
+    min: 18
+    max: 28
+    step: 0.5
+    mode: slider
+    initial: 24
+  hysteresis_camera_matrimoniale:
+    name: Isteresi Camera Matrimoniale
+    icon: mdi:sigma-lower
+    unit_of_measurement: "°C"
+    min: 0.2
+    max: 2.0
+    step: 0.1
+    mode: slider
+    initial: 0.5
+  night_offset_camera_matrimoniale:
+    name: Night Offset Camera Matrimoniale
+    icon: mdi:weather-night
+    unit_of_measurement: "°C"
+    min: -2.0
+    max: 2.0
+    step: 0.5
+    mode: slider
+    initial: 1.0
+  humidity_dry_threshold_camera_matrimoniale:
+    name: Soglia Umidità DRY Camera Matrimoniale
+    icon: mdi:water-percent
+    unit_of_measurement: "%"
+    min: 50
+    max: 80
+    step: 1
+    mode: slider
+    initial: 65
+
+  # CAMERA DELLE BAMBINE
+  setpoint_camera_bambine:
+    name: Setpoint Camera delle Bambine
+    icon: mdi:thermometer
+    unit_of_measurement: "°C"
+    min: 18
+    max: 28
+    step: 0.5
+    mode: slider
+    initial: 24
+  hysteresis_camera_bambine:
+    name: Isteresi Camera delle Bambine
+    icon: mdi:sigma-lower
+    unit_of_measurement: "°C"
+    min: 0.2
+    max: 2.0
+    step: 0.1
+    mode: slider
+    initial: 0.5
+  night_offset_camera_bambine:
+    name: Night Offset Camera delle Bambine
+    icon: mdi:weather-night
+    unit_of_measurement: "°C"
+    min: -2.0
+    max: 2.0
+    step: 0.5
+    mode: slider
+    initial: 1.0
+  humidity_dry_threshold_camera_bambine:
+    name: Soglia Umidità DRY Camera delle Bambine
+    icon: mdi:water-percent
+    unit_of_measurement: "%"
+    min: 50
+    max: 80
+    step: 1
+    mode: slider
+    initial: 65

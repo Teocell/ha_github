@@ -1,5 +1,6 @@
 # ⚠️ File sensibili
 secrets.yaml
+.secrets.yaml.swp
 
 # 🧠 File del database e backup
 home-assistant_v2.db
@@ -13,6 +14,8 @@ home-assistant_v2.db-wal
 home-assistant.log
 home-assistant.log.*
 *.log
+*.log.1
+*.sqlite
 
 # ⚙️ Cartelle temporanee e compilate
 __pycache__/
@@ -33,6 +36,9 @@ hacsfiles/
 # 🔒 Altri file locali o temporanei
 .storage/
 .cloud/
+.ipynb_checkpoints/
+.vscode/
+.idea/
 *.tar
 *.tar.gz
 *.zip
@@ -44,3 +50,7 @@ hacsfiles/
 test/
 tests/
 config/.DS_Store
+
+# Backup & media pesanti
+backups/
+media/

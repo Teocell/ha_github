@@ -9,7 +9,8 @@ from uuid import uuid4
 
 import aiohttp
 
-from . import MEROSSDEBUG, MerossProtocolError, const as mc
+from . import MEROSSDEBUG
+from .protocol import MerossProtocolError, const as mc
 
 SECRET = "23x17ahWarFH6w29"
 
@@ -127,7 +128,9 @@ class DeviceInfoType(typing.TypedDict):
     domain: str  # optionally formatted as host:port
     reservedDomain: str  # optionally formatted as host:port
     hardwareCapabilities: list
-    __subDeviceInfo: typing.NotRequired[dict[str, "SubDeviceInfoType"]]  # this key is not from meross api
+    __subDeviceInfo: typing.NotRequired[
+        dict[str, "SubDeviceInfoType"]
+    ]  # this key is not from meross api
 
 
 class LatestVersionType(typing.TypedDict, total=False):
@@ -207,9 +210,7 @@ def _obfuscate_nothing(value: typing.Any) -> typing.Any:
     return value
 
 
-_obfuscate_function_type = typing.Callable[
-    [typing.Any], typing.Any
-]
+_obfuscate_function_type = typing.Callable[[typing.Any], typing.Any]
 
 
 async def async_cloudapi_post(
@@ -284,7 +285,7 @@ async def async_cloudapi_post(
                 logging.DEBUG,
                 "async_cloudapi_post:RECEIVE url:%s response:%s",
                 url_or_path,
-                obfuscate_func(text_response)
+                obfuscate_func(text_response),
             )
 
         json_response = json.loads(text_response)
@@ -452,7 +453,9 @@ class CloudApiClient:
         self, password: str, credentials: MerossCloudCredentials | None = None
     ):
         credentials = credentials or self.credentials
-        assert credentials
+        assert (
+            credentials
+        ), "CloudApiClient.async_token_refresh called without credentials"
 
         newcredentials = await async_cloudapi_signin(
             credentials[mc.KEY_EMAIL],

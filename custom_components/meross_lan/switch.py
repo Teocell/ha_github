@@ -3,14 +3,17 @@ import typing
 
 from homeassistant.components import switch
 
-from . import meross_entity as me
-from .merossclient import const as mc, extract_dict_payloads, namespaces as mn
+from .helpers import entity as me
+from .merossclient import extract_dict_payloads
+from .merossclient.protocol import const as mc, namespaces as mn
 
 if typing.TYPE_CHECKING:
+    from typing import Unpack
+
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-    from .meross_device import DigestInitReturnType, MerossDevice, MerossDeviceBase
+    from .helpers.device import BaseDevice, Device, DigestInitReturnType
 
 
 async def async_setup_entry(
@@ -19,7 +22,7 @@ async def async_setup_entry(
     me.platform_setup_entry(hass, config_entry, async_add_devices, switch.DOMAIN)
 
 
-class MLSwitchBase(me.MerossBinaryEntity, switch.SwitchEntity):
+class MLSwitchBase(me.MLBinaryEntity, switch.SwitchEntity):
     """
     Base (almost abstract) entity for switches. This has 2 main implementations:
     - MLSwitch: switch representing some device feature (an actual output or a config option)
@@ -30,7 +33,7 @@ class MLSwitchBase(me.MerossBinaryEntity, switch.SwitchEntity):
     DeviceClass = switch.SwitchDeviceClass
 
 
-class MLConfigSwitch(me.MEAlwaysAvailableMixin, MLSwitchBase):
+class MLEmulatedSwitch(me.MEPartialAvailableMixin, MLSwitchBase):
     """
     Switch entity not related to any device feature but used to configure
     behaviors for meross_lan entities.
@@ -41,17 +44,17 @@ class MLConfigSwitch(me.MEAlwaysAvailableMixin, MLSwitchBase):
 
     def __init__(
         self,
-        manager: "MerossDeviceBase",
+        manager: "BaseDevice",
         channel: object,
         entitykey: str | None = None,
-        **kwargs: "typing.Unpack[me.MerossEntityArgs]",
+        /,
+        **kwargs: "Unpack[MLSwitchBase.Args]",
     ):
         super().__init__(
             manager,
             channel,
             entitykey,
             MLSwitchBase.DeviceClass.SWITCH,
-            device_value=0,
             **kwargs,
         )
 
@@ -80,7 +83,7 @@ class MLSwitch(MLSwitchBase):
     """
 
     @abstractmethod
-    async def async_request_value(self, device_value):
+    async def async_request_value(self, device_value, /):
         raise NotImplementedError("'async_request_value' needs to be overriden")
 
     async def async_turn_on(self, **kwargs):
@@ -99,7 +102,7 @@ class PhysicalLockSwitch(me.MEListChannelMixin, MLSwitch):
     # HA core entity attributes:
     entity_category = MLSwitch.EntityCategory.CONFIG
 
-    def __init__(self, manager: "MerossDevice"):
+    def __init__(self, manager: "Device"):
         # right now we expect only 1 entity on channel == 0 (whatever)
         super().__init__(manager, 0, mc.KEY_LOCK, self.DeviceClass.SWITCH)
         manager.register_parser_entity(self)
@@ -109,7 +112,7 @@ class MLToggle(me.MENoChannelMixin, MLSwitch):
 
     ns = mn.Appliance_Control_Toggle
 
-    def __init__(self, manager: "MerossDevice"):
+    def __init__(self, manager: "Device", /):
         # 2024-03-13: passing entitykey="0" instead of channel in order
         # to mantain unique_id compatibility with installations but
         # updating to new toggle entity model (where channel is None for this entity type)
@@ -117,7 +120,7 @@ class MLToggle(me.MENoChannelMixin, MLSwitch):
         manager.register_parser_entity(self)
 
 
-def digest_init_toggle(device: "MerossDevice", digest: dict) -> "DigestInitReturnType":
+def digest_init_toggle(device: "Device", digest: dict, /) -> "DigestInitReturnType":
     """{"onoff": 0, "lmTime": 1645391086}"""
     MLToggle(device)
     handler = device.namespace_handlers[mn.Appliance_Control_Toggle.name]
@@ -128,15 +131,14 @@ class MLToggleX(me.MEDictChannelMixin, MLSwitch):
 
     ns = mn.Appliance_Control_ToggleX
 
-    def __init__(self, manager: "MerossDevice", channel: object):
+    def __init__(self, manager: "Device", channel: object, /):
         super().__init__(manager, channel, None, MLSwitch.DeviceClass.OUTLET)
         manager.register_parser_entity(self)
 
 
 def digest_init_togglex(
-    device: "MerossDevice", togglex_digest: list
+    device: "Device", togglex_digest: list, /
 ) -> "DigestInitReturnType":
-    """[{ "channel": 0, "onoff": 1 }]"""
     # We don't initialize every switch/ToggleX here since the digest reported channels
     # might be mapped to more specialized entities:
     # this is true for lights (MLLight), garageDoor (MLGarage) and fan (MLFan) though
@@ -170,6 +172,13 @@ def digest_init_togglex(
     for channel in channels:
         MLToggleX(device, channel)
 
-    handler = device.get_handler(mn.Appliance_Control_ToggleX)
+    ns = mn.Appliance_Control_ToggleX
+    handler = device.get_handler(ns)
     handler.register_entity_class(MLToggleX)
+    if device.descriptor.is_refoss:
+        handler.polling_request = (
+            ns.name,
+            mc.METHOD_GET,
+            {ns.key: {mc.KEY_CHANNEL: 65535}},
+        )
     return handler.parse_list, (handler,)

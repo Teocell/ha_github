@@ -15,20 +15,22 @@ from homeassistant.components.light import (
 )
 import homeassistant.util.color as color_util
 
-from . import const as mlc, meross_entity as me
-from .helpers import clamp
+from . import const as mlc
+from .helpers import clamp, entity as me
 from .helpers.namespaces import (
     EntityNamespaceHandler,
     EntityNamespaceMixin,
     NamespaceHandler,
+    mc,
+    mn,
 )
-from .merossclient import const as mc, namespaces as mn
 
 if typing.TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-    from .meross_device import DigestInitReturnType, MerossDevice
+    from .helpers.device import Device, DigestInitReturnType
+    from .merossclient.protocol import types as mt
 
 
 async def async_setup_entry(
@@ -168,7 +170,7 @@ def native_to_kelvin(temperature: int):
     )
 
 
-class MLLightBase(me.MerossBinaryEntity, light.LightEntity):
+class MLLightBase(me.MLBinaryEntity, light.LightEntity):
     """
     base 'abstract' class for meross light entities handling
     either
@@ -177,7 +179,7 @@ class MLLightBase(me.MerossBinaryEntity, light.LightEntity):
     """
 
     PLATFORM = light.DOMAIN
-    manager: "MerossDevice"
+    manager: "Device"
 
     # define our own EFFECT_OFF semantically compatible to the 'new' HA core
     # symbol in order to mantain a sort of backward compatibility
@@ -244,7 +246,7 @@ class MLLightBase(me.MerossBinaryEntity, light.LightEntity):
 
     def __init__(
         self,
-        manager: "MerossDevice",
+        manager: "Device",
         digest: dict,
         effect_list: list[str] | None = None,
     ):
@@ -434,7 +436,7 @@ class MLLight(MLLightBase):
     NS_APPLIANCE_CONTROL_LIGHT in abilities
     """
 
-    manager: "MerossDevice"
+    manager: "Device"
 
     ns = mn.Appliance_Control_Light
 
@@ -463,7 +465,7 @@ class MLLight(MLLightBase):
 
     def __init__(
         self,
-        manager: "MerossDevice",
+        manager: "Device",
         digest: dict,
         effect_list: list[str] | None = None,
     ):
@@ -529,13 +531,19 @@ class MLLight(MLLightBase):
                     self.color_mode = ColorMode.COLOR_TEMP
                     return
 
-                if capacity & mc.LIGHT_CAPACITY_LUMINANCE:
+                if ColorMode.BRIGHTNESS in self.supported_color_modes:
                     self.color_mode = ColorMode.BRIGHTNESS
                     return
 
-                self.color_mode = ColorMode.UNKNOWN
+                # Here we should set ColorMode.UNKNOWN since capacity is inconsistent
+                # with HA ColorMode(s). This shouldnt happen though in real life
+                # since devices supporting either rgb or color_temp should never
+                # report only luminance capacity. For better behavior (also in our testing)
+                # we'll leave the color_mode unchanged
+                # self.color_mode = ColorMode.UNKNOWN
 
         except Exception as exception:
+            self.color_mode = ColorMode.UNKNOWN
             self.log_exception(
                 self.WARNING,
                 exception,
@@ -569,7 +577,7 @@ class MLLight(MLLightBase):
             elif self._t_temp_end:
                 _light[mc.KEY_CAPACITY] = mc.LIGHT_CAPACITY_TEMPERATURE_LUMINANCE
             else:
-                _light[mc.KEY_CAPACITY] |= mc.LIGHT_CAPACITY_LUMINANCE
+                _light[mc.KEY_CAPACITY] = mc.LIGHT_CAPACITY_LUMINANCE
         else:
             _t_duration = None
             if ATTR_BRIGHTNESS in kwargs:
@@ -578,7 +586,7 @@ class MLLight(MLLightBase):
                 _light[mc.KEY_LUMINANCE] = MSL_LUMINANCE_MAX
             if ATTR_EFFECT in kwargs:
                 _light[mc.KEY_EFFECT] = self.effect_list.index(kwargs[ATTR_EFFECT])  # type: ignore
-                _light[mc.KEY_CAPACITY] |= mc.LIGHT_CAPACITY_EFFECT
+                _light[mc.KEY_CAPACITY] = mc.LIGHT_CAPACITY_EFFECT
             elif ATTR_RGB_COLOR in kwargs:
                 _light[mc.KEY_RGB] = self._rgb_to_native(kwargs[ATTR_RGB_COLOR])
                 _light[mc.KEY_CAPACITY] = mc.LIGHT_CAPACITY_RGB_LUMINANCE
@@ -588,7 +596,7 @@ class MLLight(MLLightBase):
                 )
                 _light[mc.KEY_CAPACITY] = mc.LIGHT_CAPACITY_TEMPERATURE_LUMINANCE
             else:
-                _light[mc.KEY_CAPACITY] |= mc.LIGHT_CAPACITY_LUMINANCE
+                _light[mc.KEY_CAPACITY] = mc.LIGHT_CAPACITY_LUMINANCE
 
         if await self.async_request_light_on_flush(_light):
             if _t_duration:
@@ -696,7 +704,7 @@ class MLLightEffect(MLLight):
         "_light_effect_handler",
     )
 
-    def __init__(self, manager: "MerossDevice", digest: dict):
+    def __init__(self, manager: "Device", digest: dict):
         self._light_effect_list: list[dict] = []
         super().__init__(manager, digest, [])
         self._light_effect_handler = NamespaceHandler(
@@ -709,7 +717,7 @@ class MLLightEffect(MLLight):
             self._rgb_to_native = rgbw_patch_to_native
             self._native_to_rgb = native_to_rgbw_patch
 
-    # interface: MerossBinaryEntity
+    # interface: MLBinaryEntity
     def update_onoff(self, onoff):
         if self.is_on != onoff:
             self.is_on = onoff
@@ -741,13 +749,15 @@ class MLLightEffect(MLLight):
     async def async_turn_on(self, **kwargs):
         if self._t_unsub:
             self._transition_cancel()
+        _light = self._light
+        _capacity = _light.get(mc.KEY_CAPACITY, 0)
         # intercept light command if it is related to effects (on/off/change of luminance)
         if ATTR_EFFECT in kwargs:
             effect_index = self.effect_list.index(kwargs[ATTR_EFFECT])  # type: ignore
             if effect_index == len(self._light_effect_list):  # EFFECT_OFF
-                _light = dict(self._light)
+                _light = dict(_light)
                 _light.pop(mc.KEY_EFFECT, None)
-                _light[mc.KEY_CAPACITY] &= ~mc.LIGHT_CAPACITY_EFFECT
+                _light[mc.KEY_CAPACITY] = _capacity & ~mc.LIGHT_CAPACITY_EFFECT
                 if await self.async_request_light_on_flush(_light):
                     return
             else:
@@ -758,9 +768,8 @@ class MLLightEffect(MLLight):
                     mc.METHOD_SET,
                     {mc.KEY_EFFECT: [_light_effect]},
                 ):
-                    _light = self._light
                     _light[mc.KEY_EFFECT] = effect_index
-                    _light[mc.KEY_CAPACITY] |= mc.LIGHT_CAPACITY_EFFECT
+                    _light[mc.KEY_CAPACITY] = _capacity | mc.LIGHT_CAPACITY_EFFECT
                     self._flush_light(_light)
                     if not self.is_on:
                         await self.async_request_onoff(1)
@@ -770,8 +779,7 @@ class MLLightEffect(MLLight):
             return  # TODO: report an HomeAssistantError maybe
 
         if ATTR_BRIGHTNESS in kwargs:
-            _light = self._light
-            if _light[mc.KEY_CAPACITY] & mc.LIGHT_CAPACITY_EFFECT:
+            if _capacity & mc.LIGHT_CAPACITY_EFFECT:
                 # we're trying to control the luminance of the effect though...
                 _light_effect = None
                 try:
@@ -811,7 +819,9 @@ class MLLightEffect(MLLight):
         await super().async_turn_on(**kwargs)
 
     # interface: self
-    def _handle_Appliance_Control_Light_Effect(self, header: dict, payload: dict):
+    def _handle_Appliance_Control_Light_Effect(
+        self, header, payload: "mt.MerossPayloadType", /
+    ):
         """
         {
             "effect": [
@@ -830,10 +840,9 @@ class MLLightEffect(MLLight):
         _light_effect_list = payload[mc.KEY_EFFECT]
         if self._light_effect_list != _light_effect_list:
             self._light_effect_list = _light_effect_list
-            self.effect_list = effect_list = [
+            self.effect_list = [
                 _light_effect[mc.KEY_EFFECTNAME] for _light_effect in _light_effect_list
-            ]
-            effect_list.append(MLLightBase.EFFECT_OFF)
+            ] + [MLLightBase.EFFECT_OFF]
             # add a 'fake' key so the next update will force-flush
             self._light["_"] = None
             self.manager.request(mn.Appliance_Control_Light.request_default)
@@ -848,28 +857,30 @@ class MLLightMp3(MLLight):
     Actually this should be an HP110.
     """
 
-    def __init__(self, manager: "MerossDevice", payload: dict):
+    def __init__(self, manager: "Device", payload: dict):
         super().__init__(manager, payload, mc.HP110A_LIGHT_EFFECT_LIST)
 
 
-class MLDNDLightEntity(EntityNamespaceMixin, me.MerossBinaryEntity, light.LightEntity):
+class MLDNDLightEntity(EntityNamespaceMixin, me.MLBinaryEntity, light.LightEntity):
     """
     light entity representing the device DND feature usually implemented
     through a light feature (presence light or so)
     """
 
     PLATFORM = light.DOMAIN
-    manager: "MerossDevice"
+    manager: "Device"
 
     ns = mn.Appliance_System_DNDMode
 
+    ENTITY_KEY = "dnd"
+
     # HA core entity attributes:
     color_mode: ColorMode = ColorMode.ONOFF
-    entity_category = me.EntityCategory.CONFIG
+    entity_category = me.MLBinaryEntity.EntityCategory.CONFIG
     supported_color_modes: set[ColorMode] = {ColorMode.ONOFF}
 
-    def __init__(self, manager: "MerossDevice"):
-        super().__init__(manager, None, mlc.DND_ID, mc.KEY_DNDMODE)
+    def __init__(self, manager: "Device"):
+        super().__init__(manager, None, MLDNDLightEntity.ENTITY_KEY, mc.KEY_DNDMODE)
         EntityNamespaceHandler(self)
 
     async def async_turn_on(self, **kwargs):
@@ -892,8 +903,7 @@ class MLDNDLightEntity(EntityNamespaceMixin, me.MerossBinaryEntity, light.LightE
         self.update_onoff(not payload[mc.KEY_DNDMODE][mc.KEY_MODE])
 
 
-def digest_init_light(device: "MerossDevice", digest: dict) -> "DigestInitReturnType":
-    """{ "channel": 0, "capacity": 4 }"""
+def digest_init_light(device: "Device", digest: dict) -> "DigestInitReturnType":
 
     ability = device.descriptor.ability
 
@@ -906,3 +916,38 @@ def digest_init_light(device: "MerossDevice", digest: dict) -> "DigestInitReturn
 
     handler = device.namespace_handlers[mn.Appliance_Control_Light.name]
     return handler.parse_generic, (handler,)
+
+
+def digest_init_light_effect(device: "Device", digest: list) -> "DigestInitReturnType":
+    # This is a 'new' (2025-06-17) key appearing in msl320cpr digest.
+    # The key itself is 'light.entity' and carries the effect list
+    # (same as ns Appliance.Control.Light.Effect)
+
+    try:
+        # MLLightEffect should be in place
+        light = device.entities[0]
+        if isinstance(light, MLLightEffect):
+            # initialize light effect_list (we're loading config at device init time
+            # so this could be outdated but..)
+            light._light_effect_list = digest
+            light.effect_list = [
+                _light_effect[mc.KEY_EFFECTNAME] for _light_effect in digest
+            ] + [MLLightBase.EFFECT_OFF]
+
+            handler = device.namespace_handlers[mn.Appliance_Control_Light_Effect.name]
+
+            # custom digest parser for the case
+            def _parse(digest: list):
+                # This is called inside ns_all parsing at the device handler
+                handler.lastresponse = handler.device.lastresponse
+                handler.polling_epoch_next = (
+                    handler.lastresponse + handler.polling_period
+                )
+                # this is redirecting to light._handle_Appliance_Control_Light_Effect
+                handler.handler({}, {mc.KEY_EFFECT: digest})  # type: ignore (header not used)
+
+            return _parse, ()
+    except KeyError:
+        pass
+
+    return lambda digest: None, ()

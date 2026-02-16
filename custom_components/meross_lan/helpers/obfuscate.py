@@ -14,7 +14,7 @@ import re
 import typing
 
 from .. import const as mlc
-from ..merossclient import const as mc
+from ..merossclient.protocol import const as mc
 
 
 class ObfuscateRule:
@@ -195,7 +195,7 @@ OBFUSCATE_KEYS: dict[str, ObfuscateRule] = {
     mlc.CONF_CLOUD_KEY: OBFUSCATE_KEY_MAP,
     mlc.CONF_PASSWORD: OBFUSCATE_NO_MAP,
     #
-    # MerossCloudProfile keys
+    # MerossProfile keys
     "appId": ObfuscateMap({}),
 }
 

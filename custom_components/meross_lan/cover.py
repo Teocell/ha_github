@@ -3,30 +3,43 @@ import typing
 from homeassistant.components import cover
 from homeassistant.exceptions import InvalidStateError
 
-from . import meross_entity as me
 from .const import CONF_PROTOCOL_HTTP, PARAM_ROLLERSHUTTER_TRANSITION_POLL_TIMEOUT
-from .helpers import versiontuple
-from .merossclient import const as mc, namespaces as mn
+from .helpers import entity as me, versiontuple
+from .merossclient.protocol import const as mc, namespaces as mn
 from .number import MLConfigNumber
 
 if typing.TYPE_CHECKING:
     import asyncio
 
-    from .meross_device import MerossDevice
+    from .helpers.device import Device
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     me.platform_setup_entry(hass, config_entry, async_add_devices, cover.DOMAIN)
 
 
-class MLCover(me.MerossEntity, cover.CoverEntity):
+class MLCover(me.MLEntity, cover.CoverEntity):
 
     ENTITY_COMPONENT = cover
     PLATFORM = cover.DOMAIN
+
+    try:
+        CoverState = cover.CoverState  # type: ignore[attr-defined]
+    except AttributeError:
+        import enum
+
+        class CoverState(enum.StrEnum):
+            """State of Cover entities."""
+
+            CLOSED = "closed"
+            CLOSING = "closing"
+            OPEN = "open"
+            OPENING = "opening"
+
     DeviceClass = cover.CoverDeviceClass
     EntityFeature = cover.CoverEntityFeature
 
-    manager: "MerossDevice"
+    manager: "Device"
 
     # HA core entity attributes:
     is_closed: bool | None
@@ -43,7 +56,7 @@ class MLCover(me.MerossEntity, cover.CoverEntity):
 
     def __init__(
         self,
-        manager: "MerossDevice",
+        manager: "Device",
         channel: object | None,
         device_class: "MLCover.DeviceClass",
     ):
@@ -54,7 +67,7 @@ class MLCover(me.MerossEntity, cover.CoverEntity):
         self._transition_end_unsub: "asyncio.TimerHandle | None" = None
         super().__init__(manager, channel, None, device_class)
 
-    # interface: MerossEntity
+    # interface: MLEntity
     async def async_shutdown(self):
         self._transition_cancel()
         await super().async_shutdown()
@@ -104,7 +117,7 @@ class MLRollerShutter(MLCover):
         "_position_starttime",
     )
 
-    def __init__(self, manager: "MerossDevice"):
+    def __init__(self, manager: "Device"):
         self.current_cover_position = None
         self.supported_features = (
             MLCover.EntityFeature.OPEN
@@ -129,7 +142,7 @@ class MLRollerShutter(MLCover):
                 if fw_version <= (2, 1, 4):
                     # trying to detect if ns_multiple is offending
                     # 2.1.4 devices (#419)
-                    manager.disable_multiple()
+                    manager.enable_multiple(False)
 
         except Exception:
             self._position_native_isgood = False
@@ -142,6 +155,11 @@ class MLRollerShutter(MLCover):
         manager.register_parser(self, mn.Appliance_RollerShutter_Config)
         manager.register_parser(self, mn.Appliance_RollerShutter_Position)
         manager.register_parser(self, mn.Appliance_RollerShutter_State)
+        if mn.Appliance_Control_ToggleX.name in descriptor.ability:
+            # This is still to be understood. This call will do nothing
+            # since the digest seen so far carries an empty list of channels
+            # even though the abilities show ToggleX support.
+            manager.register_togglex_channel(self)
 
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
@@ -255,7 +273,7 @@ class MLRollerShutter(MLCover):
             # since the only reason for failing is the device not supporting
             # ns_multiple (unlikely) or the response being truncated due to
             # overflow (unlikely too)
-            # At this stage the responses are already processed by the MerossDevice
+            # At this stage the responses are already processed by the Device
             # interface and we should already be 'in transition'
             if responses[0][mc.KEY_HEADER][mc.KEY_METHOD] == mc.METHOD_SETACK:
                 if (
@@ -420,6 +438,9 @@ class MLRollerShutter(MLCover):
 
         if self._transition_unsub and (state == mc.ROLLERSHUTTER_STATE_IDLE):
             self._transition_cancel()
+
+    def _parse_togglex(self, payload: dict):
+        pass
 
     async def _async_transition_callback(self):
         """Schedule a repetitive callback when we detect or suspect shutter movement.

@@ -26,3 +26,146 @@ save_snapshot_salotto:
       device_id: e152c32bb0a8c86f07de5290c8429271
   mode: single
   icon: mdi:camera
+allarme_suona_sirena_in_tutta_la_casa:
+  sequence:
+  - action: media_player.play_media
+    target:
+      entity_id: media_player.tutta_la_casa_2
+    data:
+      media_content_id: media-source://media_source/local/sirena.mp3
+      media_content_type: audio/mpeg
+    metadata:
+      title: sirena.mp3
+      thumbnail:
+      media_class: music
+      children_media_class:
+      navigateIds:
+      - {}
+      - media_content_type: app
+        media_content_id: media-source://media_source
+  alias: Allarme | Suona Sirena in Tutta la Casa
+  description: ''
+campanello_suona_in_tutta_la_casa:
+  sequence:
+  - action: media_player.play_media
+    target:
+      entity_id: media_player.tutta_la_casa_2
+    data:
+      media_content_id: media-source://tts/tts.home_assistant_cloud?message=C%27%C3%A8+qualcuno+alla+porta&language=it-IT&voice=FiammaNeural
+      media_content_type: audio/mp3
+    metadata:
+      title: C'è qualcuno alla porta
+      thumbnail: https://brands.home-assistant.io/_/cloud/logo.png
+      media_class: app
+      children_media_class:
+      navigateIds:
+      - {}
+      - media_content_type: app
+        media_content_id: media-source://tts
+      - media_content_type: audio/mp3
+        media_content_id: media-source://tts/tts.home_assistant_cloud?message=C%27%C3%A8+qualcuno+alla+porta&language=it-IT&voice=FiammaNeural
+  alias: Campanello | Suona in Tutta la Casa
+  description: ''
+ai_check_image_notify:
+  alias: _AI | Check Salotto_2 (Blink)
+  mode: single
+  sequence:
+  - target:
+      entity_id: camera.salotto_2
+    data:
+      filename: /tmp/salotto.jpg
+    action: camera.snapshot
+  - data:
+      entity_id: ai_task.openai_ai_task
+      task_name: check_salotto
+      instructions: 'Restituisci SOLO un JSON valido: {"person_present": true|false,
+        "num_people": 0, "notes": "stringa breve"}. Considera solo persone; se immagine
+        scura/ambigua usa person_present=false e notes="uncertain".
+
+        '
+      attachments:
+      - media_content_id: media-source://camera/camera.salotto_2
+        media_content_type: image/jpeg
+    action: ai_task.generate_data
+  - wait_for_trigger:
+    - event_type: ai_task.completed
+      event_data:
+        entity_id: ai_task.openai_ai_task
+        task_name: check_salotto
+      trigger: event
+    timeout: 00:00:20
+    continue_on_timeout: false
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{% set t = (trigger.event.data.response\n            | default(trigger.event.data.text,
+          true)\n            | default('', true) | trim) %}\n{% set j = t if (t.startswith('{')
+          and t.endswith('}')) else\n   '{\"person_present\": false, \"num_people\":
+          0, \"notes\": \"non_json\"}' %}\n{{ (j | from_json).person_present | default(false)
+          }}"
+      sequence:
+      - data:
+          title: ⚠️ Persona rilevata
+          message: "Camera: {{ state_attr('camera.salotto_2','friendly_name') or 'Salotto'
+            }} | Persone: {{\n  ((trigger.event.data.response\n    | default(trigger.event.data.text,
+            true)\n    | default('{}', true) | from_json).num_people | default(1))
+            }}\n| Note: {{\n  ((trigger.event.data.response\n    | default(trigger.event.data.text,
+            true)\n    | default('{}', true) | from_json).notes | default('')) }}"
+        action: persistent_notification.create
+      - data:
+          title: "\U0001F3E0 Allarme: persona rilevata"
+          message: "{{ state_attr('camera.salotto_2','friendly_name') or 'Salotto'
+            }}: {{\n  ((trigger.event.data.response\n    | default(trigger.event.data.text,
+            true)\n    | default('{}', true) | from_json).num_people | default(1))
+            }} persona/e.\n{{\n  ((trigger.event.data.response\n    | default(trigger.event.data.text,
+            true)\n    | default('{}', true) | from_json).notes | default('')) }}"
+          data:
+            ttl: 0
+            priority: high
+            image: /tmp/salotto.jpg
+        action: notify.mobile_app_tuo_telefono
+ai_check_ingresso_blink:
+  alias: _AI | Check Ingresso (Blink)
+  mode: single
+  sequence:
+  - target:
+      entity_id: camera.ingresso_e_cucina
+    data:
+      filename: /tmp/ingresso.jpg
+    action: camera.snapshot
+  - response_variable: ai_result
+    data:
+      entity_id: ai_task.openai_ai_task
+      task_name: check_ingresso
+      instructions: 'Restituisci SOLO un JSON valido: {"person_present": true|false,
+        "num_people": 0, "notes": "stringa breve"}. Considera solo persone; se immagine
+        scura/ambigua usa person_present=false e notes="uncertain".
+
+        '
+      attachments:
+      - media_content_id: media-source://camera/camera.ingresso_e_cucina
+        media_content_type: image/jpeg
+    action: ai_task.generate_data
+  - variables:
+      ai_text: '{{ ai_result.response | default('''') | trim }}'
+      ai_json: "{% if ai_text.startswith('{') and ai_text.endswith('}') %}\n  {{ ai_text
+        }}\n{% else %}\n  {\"person_present\": false, \"num_people\": 0, \"notes\":
+        \"non_json\"}\n{% endif %}"
+      person_present: '{{ (ai_json | from_json).person_present | default(false) }}'
+      num_people: '{{ (ai_json | from_json).num_people | default(0) }}'
+      notes: '{{ (ai_json | from_json).notes | default('''') }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ person_present }}'
+      sequence:
+      - data:
+          title: ⚠️ Persona rilevata
+          message: 'Ingresso | Persone: {{ num_people }} | Note: {{ notes }}'
+        action: persistent_notification.create
+      - data:
+          title: "\U0001F3E0 Allarme: persona rilevata"
+          message: 'Ingresso: {{ num_people }} persona/e. {{ notes }}'
+          data:
+            image: /tmp/ingresso.jpg
+        action: notify.mobile_app_tuo_telefono
