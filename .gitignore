@@ -2,6 +2,11 @@
 secrets.yaml
 .secrets.yaml.swp
 
+# 🔑 Chiavi SSH e autenticazione
+.ssh/
+.ip_authenticated.yaml
+ip_bans.yaml
+
 # 🧠 File del database e backup
 home-assistant_v2.db
 home-assistant_v2.db-shm
@@ -13,6 +18,7 @@ home-assistant_v2.db-wal
 # 📝 Log
 home-assistant.log
 home-assistant.log.*
+home-assistant.log.fault
 *.log
 *.log.1
 *.sqlite
@@ -46,10 +52,25 @@ hacsfiles/
 *.bak
 *.tmp
 
+# 🔐 Lock e file di runtime
+.ha_run.lock
+
+# 📻 Z-Wave e Zigbee (file temporanei e config locali)
+zigbee.db-shm
+zigbee.db-wal
+pyozw.sqlite
+zwcfg_*.xml
+zwscene.xml
+OZW_Log.txt
+
+# 📦 TTS cache
+tts/
+
 # 🧪 Test locali o file da evitare nel repo
 test/
 tests/
 config/.DS_Store
+.DS_Store
 
 # Backup & media pesanti
 backups/
